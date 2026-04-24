@@ -56,6 +56,7 @@ function Pill({ label, value, tone }: { label: string; value: string; tone: stri
 function MovieDetail() {
   const { movieId } = Route.useParams();
   const [movie, setMovie] = useState<MovieRow | null>(null);
+  const [watchers, setWatchers] = useState<WatcherRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFoundFlag, setNotFoundFlag] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
@@ -64,20 +65,52 @@ function MovieDetail() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("movies")
-        .select(
-          "id, title, year, poster_url, overview, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at"
-        )
-        .eq("id", movieId)
-        .maybeSingle();
+      const [movieRes, profilesRes, watchesRes] = await Promise.all([
+        supabase
+          .from("movies")
+          .select(
+            "id, title, year, poster_url, overview, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at"
+          )
+          .eq("id", movieId)
+          .maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("id, first_name, is_approved")
+          .eq("is_approved", true),
+        supabase
+          .from("watches")
+          .select("user_id, rating")
+          .eq("movie_id", movieId),
+      ]);
 
       if (cancelled) return;
-      if (error) {
-        console.error("[movie-detail]", error.message);
+
+      if (movieRes.error) console.error("[movie-detail] movie:", movieRes.error.message);
+      if (profilesRes.error) console.error("[movie-detail] profiles:", profilesRes.error.message);
+      if (watchesRes.error) console.error("[movie-detail] watches:", watchesRes.error.message);
+
+      if (!movieRes.data) setNotFoundFlag(true);
+      setMovie((movieRes.data as MovieRow | null) ?? null);
+
+      const watchMap = new Map<string, number | null>();
+      for (const w of (watchesRes.data ?? []) as { user_id: string; rating: number | null }[]) {
+        watchMap.set(w.user_id, w.rating);
       }
-      if (!data) setNotFoundFlag(true);
-      setMovie((data as MovieRow | null) ?? null);
+      const merged: WatcherRow[] = (
+        (profilesRes.data ?? []) as { id: string; first_name: string | null }[]
+      )
+        .map((p) => ({
+          id: p.id,
+          first_name: p.first_name,
+          watched: watchMap.has(p.id),
+          rating: watchMap.get(p.id) ?? null,
+        }))
+        .sort((a, b) => {
+          if (a.watched !== b.watched) return a.watched ? -1 : 1;
+          return (a.first_name ?? "").localeCompare(b.first_name ?? "");
+        });
+      setWatchers(merged);
+
       setLoading(false);
     })();
     return () => {
