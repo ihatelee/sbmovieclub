@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Check, Film, Loader2, Plus, Search, Star, Trash2, Users, X } from "lucide-react";
 
 import { SiteHeader } from "@/components/SiteHeader";
+import { PickedBy } from "@/components/PickedBy";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
