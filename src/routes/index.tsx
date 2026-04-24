@@ -277,19 +277,64 @@ function HomePage() {
                   </p>
                 )}
 
-                <div className="mt-7 flex flex-wrap gap-3">
-                  <Link
-                    to="/movies/$movieId"
-                    params={{ movieId: current.id }}
-                    className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-black text-primary-foreground transition-all hover:shadow-[var(--shadow-glow-orange)]"
-                  >
-                    ▶ View details
-                  </Link>
-                </div>
+                {(() => {
+                  const myWatch = session?.user
+                    ? watches.find((w) => w.user_id === session.user.id) ?? null
+                    : null;
+                  const iWatched = myWatch !== null;
+                  const myRating = myWatch?.rating ?? null;
+                  return (
+                    <>
+                      <div className="mt-7 flex flex-wrap items-center gap-3">
+                        <Link
+                          to="/movies/$movieId"
+                          params={{ movieId: current.id }}
+                          className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-black text-primary-foreground transition-all hover:shadow-[var(--shadow-glow-orange)]"
+                        >
+                          ▶ View details
+                        </Link>
+                        {iWatched && (
+                          <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-5 py-3 text-sm font-black text-primary">
+                            <span aria-hidden>✓</span>
+                            Watched
+                            {myRating != null && (
+                              <span className="ml-1 text-foreground/80">
+                                · {"🍿".repeat(myRating)}
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </div>
 
-                {isLoggedIn && session?.user && (
-                  <HeroRating movieId={current.id} userId={session.user.id} />
-                )}
+                      {isLoggedIn && session?.user && !iWatched && (
+                        <HeroRating
+                          movieId={current.id}
+                          userId={session.user.id}
+                          onChange={handleWatchChange}
+                        />
+                      )}
+
+                      {watchedRows.length > 0 && (
+                        <div className="mt-6">
+                          <div className="text-[11px] font-black uppercase tracking-[0.18em] text-muted-foreground">
+                            Watched by
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            {watchedRows.map((w) => (
+                              <WatchedAvatar
+                                key={w.user_id}
+                                name={w.profile?.first_name ?? null}
+                                url={w.profile?.avatar_url ?? null}
+                                rating={w.rating}
+                                size={36}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </>
           ) : (
