@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
+import { UserAvatar } from "@/components/UserAvatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
@@ -176,14 +177,24 @@ function ProfilePage() {
           <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">
             Your profile
           </span>
-          <h1 className="mt-3 text-5xl font-black tracking-tight md:text-6xl">
-            Hey, {firstName}! <span aria-hidden>🍿</span>
-          </h1>
-          <p className="mt-3 text-base font-semibold text-muted-foreground">
-            {loading
-              ? "Loading…"
-              : `${totalWatched} ${totalWatched === 1 ? "film" : "films"} watched`}
-          </p>
+          <div className="mt-3 flex items-center gap-5">
+            <UserAvatar
+              name={firstName}
+              url={profile?.avatar_url ?? null}
+              size={88}
+              className="ring-4 ring-primary/30"
+            />
+            <div>
+              <h1 className="text-5xl font-black tracking-tight md:text-6xl">
+                Hey, {firstName}! <span aria-hidden>🍿</span>
+              </h1>
+              <p className="mt-2 text-base font-semibold text-muted-foreground">
+                {loading
+                  ? "Loading…"
+                  : `${totalWatched} ${totalWatched === 1 ? "film" : "films"} watched`}
+              </p>
+            </div>
+          </div>
 
           {/* Stats */}
           <div className="mt-10 grid gap-4 sm:grid-cols-3">

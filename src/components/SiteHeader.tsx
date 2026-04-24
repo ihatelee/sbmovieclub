@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/contexts/AuthContext";
+import { UserAvatar } from "@/components/UserAvatar";
 
 export function SiteHeader() {
   const { session, profile, signOut } = useAuth();
@@ -7,6 +8,7 @@ export function SiteHeader() {
   const isLoggedIn = !!session;
   const isAdmin = !!profile?.is_admin;
   const firstName = profile?.first_name;
+  const avatarUrl = profile?.avatar_url ?? null;
 
   const handleSignOut = async () => {
     await signOut();
@@ -52,9 +54,10 @@ export function SiteHeader() {
               {firstName && (
                 <Link
                   to="/profile"
-                  className="hidden rounded-full px-3 py-2 text-sm font-bold text-foreground transition-colors hover:bg-secondary sm:inline-flex"
+                  className="hidden items-center gap-2 rounded-full bg-secondary py-1 pl-1 pr-3 text-sm font-bold text-foreground transition-colors hover:bg-secondary/80 sm:inline-flex"
                 >
-                  Hi, {firstName}
+                  <UserAvatar name={firstName} url={avatarUrl} size={28} />
+                  <span>{firstName}</span>
                 </Link>
               )}
               <button
