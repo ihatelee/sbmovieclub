@@ -128,7 +128,7 @@ function AuthPage() {
 }
 
 function SignInForm() {
-  const { signIn, profile } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -149,19 +149,24 @@ function SignInForm() {
       return;
     }
 
-    // The AuthContext fetches the profile after sign-in. Give it a moment.
-    // We poll the profile from context shortly via a microtask — but simplest:
-    // wait one tick, then check.
-    setTimeout(() => {
-      // Re-read from context via a fresh render — but here we already have
-      // `profile` captured at render time, so we navigate and let the guard
-      // route the user to "Pending approval" if needed.
-      if (profile && profile.is_approved === false) {
-        setPending(true);
-        return;
-      }
-      navigate({ to: "/" });
-    }, 200);
+    // After sign-in, fetch the profile fresh to decide where to send the user.
+    const { supabase } = await import("@/lib/supabase");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("is_approved")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (prof && prof.is_approved === false) {
+      setPending(true);
+      return;
+    }
+    void navigate({ to: "/" });
   }
 
   return (
