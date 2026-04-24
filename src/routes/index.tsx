@@ -240,17 +240,24 @@ function HomePage() {
                       <span>{current.runtime} min</span>
                     </>
                   )}
-                  {current.picked_by && (
+                  {(currentPicker?.first_name || current.picked_by) && (
                     <>
                       <span aria-hidden>•</span>
-                      <span>Picked by {current.picked_by}</span>
+                      <span>
+                        Picked by {currentPicker?.first_name ?? current.picked_by}
+                      </span>
                     </>
                   )}
                 </div>
 
-                {currentPicker && (
+                {(currentPicker || current.picked_by) && (
                   <div className="mt-4">
-                    <PickedBy picker={currentPicker} size="md" />
+                    <PickedBy
+                      picker={currentPicker}
+                      fallbackName={current.picked_by}
+                      linkUserId={currentPicker ? currentPickerId : null}
+                      size="md"
+                    />
                   </div>
                 )}
 
