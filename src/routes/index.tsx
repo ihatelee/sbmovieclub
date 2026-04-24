@@ -129,17 +129,26 @@ function HomePage() {
                   style={{ background: "var(--gradient-brand)" }}
                 />
                 <div className="relative overflow-hidden rounded-2xl shadow-[var(--shadow-poster)]">
-                  {current.poster_url ? (
+                  {current.poster_url && !heroImgFailed ? (
                     <img
                       src={current.poster_url}
                       alt={`${current.title} poster`}
                       width={600}
                       height={900}
+                      onError={() => setHeroImgFailed(true)}
                       className="aspect-[2/3] h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="flex aspect-[2/3] items-center justify-center bg-secondary text-sm font-bold text-muted-foreground">
-                      No poster
+                    <div
+                      className="flex aspect-[2/3] h-full w-full items-center justify-center p-6 text-center"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 60%, #16162a 100%)",
+                      }}
+                    >
+                      <span className="text-2xl font-black leading-tight tracking-tight text-white drop-shadow-lg">
+                        {current.title}
+                      </span>
                     </div>
                   )}
                 </div>
