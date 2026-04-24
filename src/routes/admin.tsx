@@ -331,7 +331,7 @@ function ScreeningsTable({
               </tr>
             ) : movies.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-10 text-center text-sm text-muted-foreground">
+                <td colSpan={5} className="px-6 py-10 text-center text-sm text-muted-foreground">
                   No movies yet — hit “Add movie” to log your first screening.
                 </td>
               </tr>
