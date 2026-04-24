@@ -256,6 +256,7 @@ function AdminPage() {
               loading={loadingMovies}
               onSetCurrent={handleSetCurrent}
               onDelete={handleDelete}
+              onSetPicker={handleSetPicker}
             />
           </TabsContent>
 
