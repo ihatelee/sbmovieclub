@@ -30,59 +30,65 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-gold: var(--gold);
-  --color-gold-foreground: var(--gold-foreground);
 
-  --font-display: "Playfair Display", "Times New Roman", serif;
+  --color-pink: var(--pink);
+  --color-imdb: #f5c518;
+  --color-rt: #fa320a;
+  --color-tmdb: #01d277;
+
+  --font-display: "Inter", system-ui, sans-serif;
   --font-sans: "Inter", system-ui, sans-serif;
 
-  --shadow-glow: 0 0 60px -10px color-mix(in oklab, var(--gold) 35%, transparent);
-  --shadow-poster: 0 25px 50px -12px oklch(0 0 0 / 0.7);
+  --shadow-glow-orange: 0 0 80px -10px rgb(255 107 53 / 0.55);
+  --shadow-glow-pink: 0 0 80px -10px rgb(255 60 172 / 0.45);
+  --shadow-poster: 0 30px 60px -15px rgb(0 0 0 / 0.7);
 }
 
 :root {
-  --radius: 0.5rem;
+  --radius: 0.875rem;
 
-  /* Cinematic dark theme — single palette (no light mode) */
-  --background: oklch(0.14 0.012 250);
-  --foreground: oklch(0.96 0.005 80);
+  /* SB Movie Club — bold streaming theme */
+  --background: #0d0d1a;
+  --foreground: #ffffff;
 
-  --card: oklch(0.18 0.014 250);
-  --card-foreground: oklch(0.96 0.005 80);
+  --card: #16162a;
+  --card-foreground: #ffffff;
 
-  --popover: oklch(0.17 0.014 250);
-  --popover-foreground: oklch(0.96 0.005 80);
+  --popover: #16162a;
+  --popover-foreground: #ffffff;
 
-  /* Gold accent — cinematic, like a film award */
-  --primary: oklch(0.78 0.13 78);
-  --primary-foreground: oklch(0.16 0.02 250);
+  /* Punchy orange */
+  --primary: #ff6b35;
+  --primary-foreground: #ffffff;
 
-  --secondary: oklch(0.24 0.018 250);
-  --secondary-foreground: oklch(0.92 0.005 80);
+  /* Hot pink — for gradients/glows */
+  --pink: #ff3cac;
 
-  --muted: oklch(0.22 0.015 250);
-  --muted-foreground: oklch(0.65 0.015 250);
+  --secondary: #1d1d33;
+  --secondary-foreground: #ffffff;
 
-  --accent: oklch(0.28 0.05 30);
-  --accent-foreground: oklch(0.96 0.005 80);
+  --muted: #1a1a2e;
+  --muted-foreground: rgba(255, 255, 255, 0.5);
 
-  --destructive: oklch(0.6 0.22 25);
-  --destructive-foreground: oklch(0.98 0 0);
+  --accent: #1d1d33;
+  --accent-foreground: #ffffff;
 
-  --border: oklch(0.26 0.015 250);
-  --input: oklch(0.22 0.015 250);
-  --ring: oklch(0.78 0.13 78);
+  --destructive: #fa320a;
+  --destructive-foreground: #ffffff;
 
-  --gold: oklch(0.78 0.13 78);
-  --gold-foreground: oklch(0.16 0.02 250);
+  --border: rgba(255, 255, 255, 0.06);
+  --input: #1a1a2e;
+  --ring: #ff6b35;
 
-  --gradient-hero: linear-gradient(
-    180deg,
-    oklch(0.14 0.012 250 / 0) 0%,
-    oklch(0.14 0.012 250 / 0.6) 50%,
-    oklch(0.14 0.012 250) 100%
-  );
-  --gradient-gold: linear-gradient(135deg, oklch(0.82 0.13 82), oklch(0.7 0.14 60));
+  --gradient-brand: linear-gradient(135deg, #ff6b35 0%, #ff3cac 100%);
+  --gradient-hero: radial-gradient(
+      ellipse 80% 50% at 20% 30%,
+      rgba(255, 107, 53, 0.18),
+      transparent 60%
+    ),
+    radial-gradient(ellipse 60% 50% at 80% 70%, rgba(255, 60, 172, 0.15), transparent 60%),
+    linear-gradient(180deg, #0d0d1a 0%, #0d0d1a 100%);
+  --gradient-fade: linear-gradient(180deg, transparent 0%, #0d0d1a 100%);
 }
 
 @layer base {
@@ -105,7 +111,14 @@
   h2,
   h3,
   h4 {
-    font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1;
   }
 }
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+.pulse-dot { animation: pulse-dot 1.6s ease-in-out infinite; }

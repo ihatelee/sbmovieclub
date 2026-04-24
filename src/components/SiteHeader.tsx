@@ -1,39 +1,39 @@
 import { Link } from "@tanstack/react-router";
-import { Film } from "lucide-react";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <Link to="/" className="group flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[image:var(--gradient-gold)] text-gold-foreground shadow-[var(--shadow-glow)]">
-            <Film className="h-4 w-4" strokeWidth={2.5} />
+        <Link to="/" className="group flex items-center gap-3">
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-base shadow-[var(--shadow-glow-orange)]"
+            style={{ background: "var(--gradient-brand)" }}
+            aria-hidden
+          >
+            🎬
           </div>
-          <div className="flex flex-col leading-none">
-            <span className="font-display text-lg tracking-tight">Reel Society</span>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-              Movie Club
-            </span>
-          </div>
+          <span className="text-lg font-black tracking-tight">
+            SB <span className="text-primary">Movie</span> Club
+          </span>
         </Link>
 
-        <nav className="flex items-center gap-1 text-sm">
+        <nav className="flex items-center gap-1 text-sm font-semibold">
           <Link
             to="/"
             activeOptions={{ exact: true }}
-            className="rounded-md px-3 py-2 text-muted-foreground transition-colors hover:text-foreground data-[status=active]:text-foreground"
+            className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground"
           >
-            Screenings
+            Home
           </Link>
           <Link
             to="/admin"
-            className="rounded-md px-3 py-2 text-muted-foreground transition-colors hover:text-foreground data-[status=active]:text-foreground"
+            className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground"
           >
             Admin
           </Link>
           <Link
             to="/auth"
-            className="ml-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-all hover:opacity-90 hover:shadow-[var(--shadow-glow)]"
+            className="ml-2 rounded-full bg-primary px-5 py-2 font-bold text-primary-foreground transition-all hover:shadow-[var(--shadow-glow-orange)]"
           >
             Sign in
           </Link>

@@ -6,7 +6,7 @@ import { movies } from "@/lib/mock-movies";
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin — Reel Society" },
+      { title: "Admin — SB Movie Club" },
       { name: "description", content: "Manage screenings and members." },
     ],
   }),
@@ -21,16 +21,16 @@ function AdminPage() {
       <div className="mx-auto max-w-7xl px-6 py-12">
         <div className="flex items-end justify-between">
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-[0.3em] text-primary">
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">
               Control room
             </span>
-            <h1 className="mt-2 font-display text-4xl">Admin</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <h1 className="mt-2 text-4xl font-black tracking-tight">Admin</h1>
+            <p className="mt-1 text-sm font-medium text-muted-foreground">
               Manage screenings, members, and club settings.
             </p>
           </div>
 
-          <button className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-all hover:opacity-90 hover:shadow-[var(--shadow-glow)]">
+          <button className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground transition-all hover:shadow-[var(--shadow-glow-orange)]">
             <Plus className="h-4 w-4" /> Add movie
           </button>
         </div>
@@ -43,31 +43,33 @@ function AdminPage() {
         </div>
 
         {/* Screenings table */}
-        <div className="mt-12 overflow-hidden rounded-xl border border-border/60 bg-card">
-          <div className="flex items-center justify-between border-b border-border/60 px-6 py-4">
-            <h2 className="font-display text-lg">Screenings</h2>
-            <span className="text-xs text-muted-foreground">{movies.length} total</span>
+        <div className="mt-12 overflow-hidden rounded-2xl border border-border bg-card">
+          <div className="flex items-center justify-between border-b border-border px-6 py-4">
+            <h2 className="text-lg font-black tracking-tight">Screenings</h2>
+            <span className="text-xs font-bold text-muted-foreground">
+              {movies.length} total
+            </span>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-border/60 text-left text-xs uppercase tracking-wider text-muted-foreground">
+              <thead className="border-b border-border text-left text-xs font-black uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="px-6 py-3 font-medium">Title</th>
-                  <th className="px-6 py-3 font-medium">Director</th>
-                  <th className="px-6 py-3 font-medium">Year</th>
-                  <th className="px-6 py-3 font-medium">Picked by</th>
-                  <th className="px-6 py-3 font-medium">Rating</th>
-                  <th className="px-6 py-3 font-medium text-right">Actions</th>
+                  <th className="px-6 py-3">Title</th>
+                  <th className="px-6 py-3">Director</th>
+                  <th className="px-6 py-3">Year</th>
+                  <th className="px-6 py-3">Picked by</th>
+                  <th className="px-6 py-3">Rating</th>
+                  <th className="px-6 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {movies.map((m) => (
                   <tr
                     key={m.id}
-                    className="border-b border-border/40 last:border-0 transition-colors hover:bg-secondary/40"
+                    className="border-b border-border last:border-0 transition-colors hover:bg-secondary/60"
                   >
-                    <td className="px-6 py-3 font-medium">{m.title}</td>
+                    <td className="px-6 py-3 font-bold">{m.title}</td>
                     <td className="px-6 py-3 text-muted-foreground">{m.director}</td>
                     <td className="px-6 py-3 text-muted-foreground">{m.year}</td>
                     <td className="px-6 py-3 text-muted-foreground">{m.pickedBy}</td>
@@ -75,7 +77,9 @@ function AdminPage() {
                       {m.rating?.toFixed(1) ?? "—"}
                     </td>
                     <td className="px-6 py-3 text-right">
-                      <button className="text-primary hover:underline">Edit</button>
+                      <button className="font-bold text-primary hover:underline">
+                        Edit
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -85,7 +89,7 @@ function AdminPage() {
         </div>
 
         <p className="mt-8 text-center text-xs text-muted-foreground">
-          Admin actions are inactive until Supabase is connected.
+          Admin actions are inactive until Lovable Cloud is connected.
         </p>
       </div>
     </div>
@@ -104,12 +108,12 @@ function Stat({
   hint?: string;
 }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-card p-5">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+    <div className="rounded-2xl border border-border bg-card p-5">
+      <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-muted-foreground">
         <Icon className="h-3.5 w-3.5" /> {label}
       </div>
-      <div className="mt-3 font-display text-3xl">{value}</div>
-      {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
+      <div className="mt-3 text-3xl font-black tracking-tight">{value}</div>
+      {hint && <div className="mt-1 text-xs font-medium text-muted-foreground">{hint}</div>}
     </div>
   );
 }
