@@ -233,6 +233,7 @@ function AdminPage() {
           <TabsContent value="screenings" className="mt-6">
             <ScreeningsTable
               movies={movies}
+              ratingsByMovie={ratingsByMovie}
               loading={loadingMovies}
               onSetCurrent={handleSetCurrent}
               onDelete={handleDelete}
