@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { UserAvatar } from "@/components/UserAvatar";
+import { PickedBy } from "@/components/PickedBy";
 import { supabase } from "@/lib/supabase";
 
 type MovieRow = {
@@ -18,6 +19,7 @@ type MovieRow = {
   tmdb_rating: number | null;
   is_current: boolean;
   added_at: string;
+  picked_by_user_id: string | null;
 };
 
 type WatcherRow = {
