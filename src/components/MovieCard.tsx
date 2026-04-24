@@ -72,6 +72,13 @@ export function MovieCard({
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
 
+        {showAvg && (
+          <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-background/85 px-2.5 py-1 text-xs font-bold backdrop-blur">
+            <span>{avgRating!.toFixed(1)}</span>
+            <span aria-hidden>🍿</span>
+          </div>
+        )}
+
         {showRating && (
           <div className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-background/85 px-2.5 py-1 text-xs font-bold backdrop-blur">
             <span aria-hidden>🍿</span>
