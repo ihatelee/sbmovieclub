@@ -113,6 +113,11 @@ function AllMoviesPage() {
     });
   };
 
+  const sortedMovies = useMemo(
+    () => sortMovies(movies, watchersByMovie, sort),
+    [movies, watchersByMovie, sort]
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
