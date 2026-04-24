@@ -291,11 +291,13 @@ function Stat({
 
 function ScreeningsTable({
   movies,
+  ratingsByMovie,
   loading,
   onSetCurrent,
   onDelete,
 }: {
   movies: MovieRow[];
+  ratingsByMovie: Record<string, { avg: number; count: number }>;
   loading: boolean;
   onSetCurrent: (id: string) => void;
   onDelete: (id: string, title: string) => void;
@@ -316,53 +318,68 @@ function ScreeningsTable({
               <th className="px-6 py-3">Title</th>
               <th className="px-6 py-3">Year</th>
               <th className="px-6 py-3">Status</th>
+              <th className="px-6 py-3">Avg rating</th>
               <th className="px-6 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-6 py-10 text-center text-muted-foreground">
+                <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">
                   <Loader2 className="mx-auto h-5 w-5 animate-spin" />
                 </td>
               </tr>
             ) : movies.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-10 text-center text-sm text-muted-foreground">
+                <td colSpan={5} className="px-6 py-10 text-center text-sm text-muted-foreground">
                   No movies yet — hit “Add movie” to log your first screening.
                 </td>
               </tr>
             ) : (
-              movies.map((m) => (
-                <tr
-                  key={m.id}
-                  className="border-b border-border last:border-0 transition-colors hover:bg-secondary/60"
-                >
-                  <td className="px-6 py-3 font-bold">
-                    <div className="flex items-center gap-3">
-                      {m.poster_url ? (
-                        <img
-                          src={m.poster_url}
-                          alt=""
-                          className="h-10 w-7 flex-none rounded object-cover"
-                        />
+              movies.map((m) => {
+                const r = ratingsByMovie[m.id];
+                return (
+                  <tr
+                    key={m.id}
+                    className="border-b border-border last:border-0 transition-colors hover:bg-secondary/60"
+                  >
+                    <td className="px-6 py-3 font-bold">
+                      <div className="flex items-center gap-3">
+                        {m.poster_url ? (
+                          <img
+                            src={m.poster_url}
+                            alt=""
+                            className="h-10 w-7 flex-none rounded object-cover"
+                          />
+                        ) : (
+                          <div className="h-10 w-7 flex-none rounded bg-muted" />
+                        )}
+                        <span className="line-clamp-1">{m.title}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
+                    <td className="px-6 py-3">
+                      {m.is_current ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-primary">
+                          <Star className="h-3 w-3 fill-current" /> Current
+                        </span>
                       ) : (
-                        <div className="h-10 w-7 flex-none rounded bg-muted" />
+                        <span className="text-xs font-medium text-muted-foreground">—</span>
                       )}
-                      <span className="line-clamp-1">{m.title}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
-                  <td className="px-6 py-3">
-                    {m.is_current ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-primary">
-                        <Star className="h-3 w-3 fill-current" /> Current
-                      </span>
-                    ) : (
-                      <span className="text-xs font-medium text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-3 text-right">
+                    </td>
+                    <td className="px-6 py-3 text-sm font-bold">
+                      {r ? (
+                        <span>
+                          🍿 {r.avg.toFixed(1)}/5{" "}
+                          <span className="font-medium text-muted-foreground">({r.count})</span>
+                        </span>
+                      ) : (
+                        <span className="text-xs font-medium text-muted-foreground">
+                          No ratings yet
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-3 text-right">
                     <div className="inline-flex items-center gap-2">
                       {!m.is_current && (
                         <Button
