@@ -81,6 +81,7 @@ function HomePage() {
   const [current, setCurrent] = useState<MovieRow | null>(null);
   const [recent, setRecent] = useState<MovieRow[]>([]);
   const [profiles, setProfiles] = useState<ProfileLite[]>([]);
+  const [currentWatcherIds, setCurrentWatcherIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [heroImgFailed, setHeroImgFailed] = useState(false);
 
