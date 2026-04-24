@@ -45,9 +45,10 @@ export function RatingBar({
                   setRating(n);
                   onRate?.(n);
                 }}
-                className="text-2xl leading-none transition-transform hover:scale-125"
+                className="leading-none transition-transform hover:scale-125"
                 style={{
-                  filter: active ? "none" : "grayscale(1) opacity(0.35)",
+                  fontSize: "28px",
+                  opacity: active ? 1 : 0.4,
                 }}
               >
                 🍿
