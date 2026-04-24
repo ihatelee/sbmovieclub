@@ -25,6 +25,7 @@ type MovieRow = {
   imdb_rating: number | null;
   rt_score: number | null;
   is_current: boolean;
+  picked_by: string | null;
 };
 
 type WatchRow = {
@@ -149,6 +150,7 @@ function AllMoviesPage() {
               <colgroup>
                 <col className="w-auto" />
                 <col className="w-20" />
+                <col className="w-32" />
                 <col className="w-44" />
                 <col className="w-24" />
                 <col className="w-44" />
@@ -158,6 +160,7 @@ function AllMoviesPage() {
                 <tr>
                   <th className="px-6 py-3">Title</th>
                   <th className="px-6 py-3">Year</th>
+                  <th className="px-6 py-3 whitespace-nowrap">Picked by</th>
                   <th className="px-6 py-3">Ratings</th>
                   <th className="px-6 py-3">Avg</th>
                   <th className="px-6 py-3 whitespace-nowrap">Watched by</th>
@@ -167,13 +170,13 @@ function AllMoviesPage() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
                       Loading…
                     </td>
                   </tr>
                 ) : sortedMovies.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
+                    <td colSpan={7} className="px-6 py-12 text-center text-muted-foreground">
                       No movies yet.
                     </td>
                   </tr>
@@ -217,6 +220,13 @@ function AllMoviesPage() {
                           </Link>
                         </td>
                         <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
+                        <td className="px-6 py-3 text-sm font-bold">
+                          {m.picked_by ? (
+                            m.picked_by
+                          ) : (
+                            <span className="text-xs font-medium text-muted-foreground">—</span>
+                          )}
+                        </td>
                         <td className="px-6 py-3">
                           <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
                             {m.imdb_rating != null && (
