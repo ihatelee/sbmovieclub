@@ -50,9 +50,12 @@ export function SiteHeader() {
           {isLoggedIn ? (
             <div className="ml-2 flex items-center gap-3">
               {firstName && (
-                <span className="hidden text-sm font-bold text-foreground sm:inline">
+                <Link
+                  to="/profile"
+                  className="hidden rounded-full px-3 py-2 text-sm font-bold text-foreground transition-colors hover:bg-secondary sm:inline-flex"
+                >
                   Hi, {firstName}
-                </span>
+                </Link>
               )}
               <button
                 onClick={handleSignOut}
