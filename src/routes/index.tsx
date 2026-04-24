@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { MovieCard } from "@/components/MovieCard";
 import { RatingBar } from "@/components/RatingBar";
 import { PickedBy } from "@/components/PickedBy";
+import { WatchedAvatar } from "@/components/WatchedAvatar";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
