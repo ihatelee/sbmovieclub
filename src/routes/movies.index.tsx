@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { UserAvatar } from "@/components/UserAvatar";
+import { PickedBy } from "@/components/PickedBy";
 import { QuickRate } from "@/components/QuickRate";
 import { SortDropdown, sortMovies, type SortKey } from "@/lib/movie-sort";
 import { useAuth } from "@/contexts/AuthContext";
