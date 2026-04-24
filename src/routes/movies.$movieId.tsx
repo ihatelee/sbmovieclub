@@ -247,6 +247,48 @@ function MovieDetail() {
           )}
         </div>
       </div>
+
+      {!loading && movie && (
+        <section className="mx-auto max-w-5xl px-6 py-12">
+          <h2 className="text-2xl font-black tracking-tight">Who's watched it</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {watchers.filter((w) => w.watched).length} of {watchers.length} members
+          </p>
+
+          {watchers.length === 0 ? (
+            <p className="mt-6 text-sm text-muted-foreground">No members yet.</p>
+          ) : (
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              {watchers.map((w) => (
+                <div
+                  key={w.id}
+                  className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-4 text-center"
+                >
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-full text-lg font-black ${
+                      w.watched
+                        ? "bg-primary/15 text-primary"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {w.watched ? "✓" : "✗"}
+                  </div>
+                  <div className="text-sm font-bold">
+                    {w.first_name ?? "Member"}
+                  </div>
+                  <div className="text-xs font-medium text-muted-foreground">
+                    {!w.watched
+                      ? "Not watched"
+                      : w.rating != null
+                        ? `🍿 ${w.rating}/5`
+                        : "No rating"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }
