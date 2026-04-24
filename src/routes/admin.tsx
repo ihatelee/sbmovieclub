@@ -82,7 +82,7 @@ function AdminPage() {
       .select(
         "id, tmdb_id, imdb_id, title, year, poster_url, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at"
       )
-      .order("added_at", { ascending: false });
+      .order("order_index", { ascending: true });
     if (error) {
       toast.error("Failed to load movies", { description: error.message });
     } else {
