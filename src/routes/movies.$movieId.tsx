@@ -219,6 +219,20 @@ function MovieDetail() {
                       🎬 Currently watching
                     </span>
                   )}
+                  {(() => {
+                    const picker = movie.picked_by_user_id
+                      ? watchers.find((w) => w.id === movie.picked_by_user_id)
+                      : null;
+                    return picker ? (
+                      <PickedBy
+                        picker={{
+                          first_name: picker.first_name,
+                          avatar_url: picker.avatar_url,
+                        }}
+                        size="md"
+                      />
+                    ) : null;
+                  })()}
                   {movie.imdb_rating != null && (
                     <Pill
                       label="IMDb"
