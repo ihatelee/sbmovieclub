@@ -216,7 +216,9 @@ function HomePage() {
                   </Link>
                 </div>
 
-                {isLoggedIn && <RatingBar />}
+                {isLoggedIn && session?.user && (
+                  <HeroRating movieId={current.id} userId={session.user.id} />
+                )}
               </div>
             </>
           ) : (
