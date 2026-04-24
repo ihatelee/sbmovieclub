@@ -19,6 +19,14 @@ type MovieRow = {
   added_at: string;
 };
 
+type WatcherRow = {
+  id: string;
+  first_name: string | null;
+  watched: boolean;
+  rating: number | null;
+};
+
+
 export const Route = createFileRoute("/movies/$movieId")({
   component: MovieDetail,
   notFoundComponent: () => (
@@ -48,6 +56,7 @@ function Pill({ label, value, tone }: { label: string; value: string; tone: stri
 function MovieDetail() {
   const { movieId } = Route.useParams();
   const [movie, setMovie] = useState<MovieRow | null>(null);
+  const [watchers, setWatchers] = useState<WatcherRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFoundFlag, setNotFoundFlag] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
@@ -56,20 +65,52 @@ function MovieDetail() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("movies")
-        .select(
-          "id, title, year, poster_url, overview, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at"
-        )
-        .eq("id", movieId)
-        .maybeSingle();
+      const [movieRes, profilesRes, watchesRes] = await Promise.all([
+        supabase
+          .from("movies")
+          .select(
+            "id, title, year, poster_url, overview, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at"
+          )
+          .eq("id", movieId)
+          .maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("id, first_name, is_approved")
+          .eq("is_approved", true),
+        supabase
+          .from("watches")
+          .select("user_id, rating")
+          .eq("movie_id", movieId),
+      ]);
 
       if (cancelled) return;
-      if (error) {
-        console.error("[movie-detail]", error.message);
+
+      if (movieRes.error) console.error("[movie-detail] movie:", movieRes.error.message);
+      if (profilesRes.error) console.error("[movie-detail] profiles:", profilesRes.error.message);
+      if (watchesRes.error) console.error("[movie-detail] watches:", watchesRes.error.message);
+
+      if (!movieRes.data) setNotFoundFlag(true);
+      setMovie((movieRes.data as MovieRow | null) ?? null);
+
+      const watchMap = new Map<string, number | null>();
+      for (const w of (watchesRes.data ?? []) as { user_id: string; rating: number | null }[]) {
+        watchMap.set(w.user_id, w.rating);
       }
-      if (!data) setNotFoundFlag(true);
-      setMovie((data as MovieRow | null) ?? null);
+      const merged: WatcherRow[] = (
+        (profilesRes.data ?? []) as { id: string; first_name: string | null }[]
+      )
+        .map((p) => ({
+          id: p.id,
+          first_name: p.first_name,
+          watched: watchMap.has(p.id),
+          rating: watchMap.get(p.id) ?? null,
+        }))
+        .sort((a, b) => {
+          if (a.watched !== b.watched) return a.watched ? -1 : 1;
+          return (a.first_name ?? "").localeCompare(b.first_name ?? "");
+        });
+      setWatchers(merged);
+
       setLoading(false);
     })();
     return () => {
@@ -206,6 +247,48 @@ function MovieDetail() {
           )}
         </div>
       </div>
+
+      {!loading && movie && (
+        <section className="mx-auto max-w-5xl px-6 py-12">
+          <h2 className="text-2xl font-black tracking-tight">Who's watched it</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {watchers.filter((w) => w.watched).length} of {watchers.length} members
+          </p>
+
+          {watchers.length === 0 ? (
+            <p className="mt-6 text-sm text-muted-foreground">No members yet.</p>
+          ) : (
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              {watchers.map((w) => (
+                <div
+                  key={w.id}
+                  className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-4 text-center"
+                >
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-full text-lg font-black ${
+                      w.watched
+                        ? "bg-primary/15 text-primary"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {w.watched ? "✓" : "✗"}
+                  </div>
+                  <div className="text-sm font-bold">
+                    {w.first_name ?? "Member"}
+                  </div>
+                  <div className="text-xs font-medium text-muted-foreground">
+                    {!w.watched
+                      ? "Not watched"
+                      : w.rating != null
+                        ? `🍿 ${w.rating}/5`
+                        : "No rating"}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }
