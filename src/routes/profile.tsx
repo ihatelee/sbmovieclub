@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { UserAvatar } from "@/components/UserAvatar";
 import { QuickRate } from "@/components/QuickRate";
+import { PickedBy } from "@/components/PickedBy";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
@@ -24,6 +25,7 @@ type MovieRow = {
   imdb_rating: number | null;
   rt_score: number | null;
   is_current: boolean;
+  picked_by_user_id: string | null;
 };
 
 type WatchRow = {
