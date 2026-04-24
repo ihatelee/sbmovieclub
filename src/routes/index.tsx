@@ -36,6 +36,7 @@ type MovieRow = {
   is_current: boolean;
   added_at: string;
   picked_by_user_id: string | null;
+  picked_by_id: string | null;
   picked_by: string | null;
 };
 
@@ -51,7 +52,7 @@ type WatchRow = {
 };
 
 const MOVIE_COLUMNS =
-  "id, tmdb_id, title, year, poster_url, overview, runtime, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id, picked_by";
+  "id, tmdb_id, title, year, poster_url, overview, runtime, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id, picked_by_id, picked_by";
 
 function RatingPill({
   label,
@@ -155,9 +156,8 @@ function HomePage() {
     return m;
   }, [profiles]);
 
-  const currentPicker = current?.picked_by_user_id
-    ? profileById.get(current.picked_by_user_id) ?? null
-    : null;
+  const currentPickerId = current?.picked_by_id ?? current?.picked_by_user_id ?? null;
+  const currentPicker = currentPickerId ? profileById.get(currentPickerId) ?? null : null;
 
   const watchedRows = useMemo(
     () =>
