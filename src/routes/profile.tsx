@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { UserAvatar } from "@/components/UserAvatar";
 import { QuickRate } from "@/components/QuickRate";
 import { PickedBy } from "@/components/PickedBy";
+import { SortDropdown, sortMovies, type SortKey } from "@/lib/movie-sort";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
