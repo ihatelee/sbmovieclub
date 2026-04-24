@@ -264,6 +264,7 @@ function MoviesTable({
             <tr>
               <th className="px-6 py-3">Title</th>
               <th className="px-6 py-3">Year</th>
+              <th className="px-6 py-3">Picked by</th>
               <th className="px-6 py-3">Ratings</th>
               <th className="px-6 py-3">Avg</th>
               <th className="px-6 py-3">Watched by</th>
