@@ -1,6 +1,18 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function SiteHeader() {
+  const { session, profile, signOut } = useAuth();
+  const navigate = useNavigate();
+  const isLoggedIn = !!session;
+  const isAdmin = !!profile?.is_admin;
+  const firstName = profile?.first_name;
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate({ to: "/auth" });
+  };
+
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
@@ -25,18 +37,38 @@ export function SiteHeader() {
           >
             Home
           </Link>
-          <Link
-            to="/admin"
-            className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground"
-          >
-            Admin
-          </Link>
-          <Link
-            to="/auth"
-            className="ml-2 rounded-full bg-primary px-5 py-2 font-bold text-primary-foreground transition-all hover:shadow-[var(--shadow-glow-orange)]"
-          >
-            Sign in
-          </Link>
+
+          {isLoggedIn && isAdmin && (
+            <Link
+              to="/admin"
+              className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground"
+            >
+              Admin
+            </Link>
+          )}
+
+          {isLoggedIn ? (
+            <div className="ml-2 flex items-center gap-3">
+              {firstName && (
+                <span className="hidden text-sm font-bold text-foreground sm:inline">
+                  Hi, {firstName}
+                </span>
+              )}
+              <button
+                onClick={handleSignOut}
+                className="rounded-full bg-secondary px-4 py-2 font-bold text-foreground transition-colors hover:bg-secondary/80"
+              >
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <Link
+              to="/auth"
+              className="ml-2 rounded-full bg-primary px-5 py-2 font-bold text-primary-foreground transition-all hover:shadow-[var(--shadow-glow-orange)]"
+            >
+              Sign in
+            </Link>
+          )}
         </nav>
       </div>
     </header>
