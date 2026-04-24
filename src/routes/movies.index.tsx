@@ -5,6 +5,7 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { PickedBy } from "@/components/PickedBy";
 import { QuickRate } from "@/components/QuickRate";
 import { SortDropdown, sortMovies, type SortKey } from "@/lib/movie-sort";
+import { MobileMovieRow } from "@/components/MobileMovieRow";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
@@ -154,7 +155,35 @@ function AllMoviesPage() {
         <div className="mb-6 flex items-center justify-end">
           <SortDropdown value={sort} onChange={setSort} />
         </div>
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
+        {/* Mobile list */}
+        <div className="overflow-hidden rounded-2xl border border-border bg-card md:hidden">
+          {loading ? (
+            <div className="px-4 py-12 text-center text-muted-foreground">Loading…</div>
+          ) : sortedMovies.length === 0 ? (
+            <div className="px-4 py-12 text-center text-muted-foreground">No movies yet.</div>
+          ) : (
+            sortedMovies.map((m) => {
+              const ws = watchersByMovie.get(m.id) ?? [];
+              const mine = myWatchByMovie.get(m.id);
+              return (
+                <MobileMovieRow
+                  key={m.id}
+                  movie={m}
+                  watchers={ws}
+                  myRating={mine?.rating ?? null}
+                  iWatched={!!mine}
+                  profileById={profileById}
+                  avatarByName={avatarByName}
+                  userId={user?.id}
+                  onChange={(next) => handleQuickChange(m.id, next)}
+                />
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
           <div className="overflow-x-auto">
             <table className="w-full table-fixed text-sm">
               <colgroup>
