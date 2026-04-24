@@ -237,6 +237,7 @@ function AdminPage() {
             <ScreeningsTable
               movies={movies}
               ratingsByMovie={ratingsByMovie}
+              profiles={profiles}
               loading={loadingMovies}
               onSetCurrent={handleSetCurrent}
               onDelete={handleDelete}
