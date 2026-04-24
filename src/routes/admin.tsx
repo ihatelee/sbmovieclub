@@ -722,6 +722,19 @@ function AddMovieDialog({
           <DialogDescription>Search TMDB and pick a result.</DialogDescription>
         </DialogHeader>
 
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-secondary/40 p-3">
+          <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+            Picked by
+          </span>
+          <PickerSelect
+            profiles={pickerProfiles}
+            value={pickerId}
+            onChange={setPickerId}
+            size="sm"
+            placeholder="Choose member"
+          />
+        </div>
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
