@@ -27,11 +27,22 @@ function avg(rs: number[]): number {
   return rs.reduce((a, b) => a + b, 0) / rs.length;
 }
 
-function stddev(rs: number[]): number {
+/**
+ * Polarization score: rewards movies where viewers split sharply between
+ * high (4-5) and low (1-2) ratings. Uses the geometric mean of high and low
+ * counts so movies need BOTH camps strongly represented to score highly.
+ * Middling 3-star ratings are ignored.
+ */
+function polarization(rs: number[]): number {
   if (rs.length < 2) return 0;
-  const m = avg(rs);
-  const v = rs.reduce((sum, r) => sum + (r - m) ** 2, 0) / rs.length;
-  return Math.sqrt(v);
+  let high = 0;
+  let low = 0;
+  for (const r of rs) {
+    if (r >= 4) high += 1;
+    else if (r <= 2) low += 1;
+  }
+  if (high === 0 || low === 0) return 0;
+  return Math.sqrt(high * low);
 }
 
 /**
