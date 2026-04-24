@@ -328,6 +328,7 @@ function ScreeningsTable({
             <tr>
               <th className="px-6 py-3">Title</th>
               <th className="px-6 py-3">Year</th>
+              <th className="px-6 py-3">Picked by</th>
               <th className="px-6 py-3">Status</th>
               <th className="px-6 py-3">Avg rating</th>
               <th className="px-6 py-3 text-right">Actions</th>
@@ -336,13 +337,13 @@ function ScreeningsTable({
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">
+                <td colSpan={6} className="px-6 py-10 text-center text-muted-foreground">
                   <Loader2 className="mx-auto h-5 w-5 animate-spin" />
                 </td>
               </tr>
             ) : movies.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-10 text-center text-sm text-muted-foreground">
+                <td colSpan={6} className="px-6 py-10 text-center text-sm text-muted-foreground">
                   No movies yet — hit “Add movie” to log your first screening.
                 </td>
               </tr>
