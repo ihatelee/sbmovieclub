@@ -202,6 +202,12 @@ function HomePage() {
                   )}
                 </div>
 
+                {currentPicker && (
+                  <div className="mt-4">
+                    <PickedBy picker={currentPicker} size="md" />
+                  </div>
+                )}
+
                 <div className="mt-5 flex flex-wrap gap-2">
                   {formatRating(current.imdb_rating, "imdb") && (
                     <RatingPill
