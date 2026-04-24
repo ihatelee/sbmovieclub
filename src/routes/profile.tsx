@@ -172,6 +172,26 @@ function ProfilePage() {
 
   const firstName = profile?.first_name ?? "there";
 
+  const handleQuickChange = (
+    movieId: string,
+    next: { rating: number | null; watched: boolean }
+  ) => {
+    setWatches((prev) => {
+      const without = prev.filter((w) => w.movie_id !== movieId);
+      if (!next.watched) return without;
+      const existing = prev.find((w) => w.movie_id === movieId);
+      return [
+        {
+          id: existing?.id ?? `tmp-${movieId}`,
+          movie_id: movieId,
+          rating: next.rating,
+          watched_at: existing?.watched_at ?? new Date().toISOString(),
+        },
+        ...without,
+      ];
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -242,6 +262,8 @@ function ProfilePage() {
                 movie={c.movie}
                 rating={c.rating}
                 watched
+                userId={user?.id}
+                onChange={(next) => handleQuickChange(c.movie.id, next)}
               />
             ))}
           </div>
@@ -268,7 +290,14 @@ function ProfilePage() {
         ) : (
           <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
             {unwatched.map((m) => (
-              <MiniCard key={m.id} movie={m} rating={null} watched={false} />
+              <MiniCard
+                key={m.id}
+                movie={m}
+                rating={null}
+                watched={false}
+                userId={user?.id}
+                onChange={(next) => handleQuickChange(m.id, next)}
+              />
             ))}
           </div>
         )}
