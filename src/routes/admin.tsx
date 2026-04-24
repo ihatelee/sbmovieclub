@@ -702,6 +702,7 @@ function AddMovieDialog({
         tmdb_rating: details.vote_average ?? null,
         is_current: false,
         picked_by_user_id: pickerId,
+        picked_by_id: pickerId,
       });
       if (error) throw error;
 
