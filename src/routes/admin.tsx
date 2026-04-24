@@ -42,6 +42,7 @@ type ProfileRow = {
   email: string | null;
   is_approved: boolean;
   is_admin: boolean;
+  avatar_url: string | null;
 };
 
 type TmdbSearchResult = {
