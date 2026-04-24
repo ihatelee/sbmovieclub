@@ -64,7 +64,7 @@ export function sortMovies<T extends { id: string }>(
     if (key === "rating") return avg(rb) - avg(ra);
     if (key === "most_watched") return wb.length - wa.length;
     if (key === "least_watched") return wa.length - wb.length;
-    if (key === "controversial") return stddev(rb) - stddev(ra);
+    if (key === "controversial") return polarization(rb) - polarization(ra);
     return 0;
   });
   return arr;
