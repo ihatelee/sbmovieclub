@@ -30,10 +30,10 @@ export function SiteHeader() {
             style={{ background: "var(--gradient-brand)" }}
             aria-hidden
           >
-            🎬
+            🍿
           </div>
           <span className="text-lg font-black tracking-tight">
-            SB <span className="text-primary">Movie</span> Club
+            SB <span className="text-primary">MOVIE</span> CLUB
           </span>
         </Link>
 
