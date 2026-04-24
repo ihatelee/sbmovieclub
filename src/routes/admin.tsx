@@ -398,8 +398,13 @@ function ScreeningsTable({
                         value={m.picked_by_user_id}
                         onChange={(id) => onSetPicker(m.id, id)}
                         size="sm"
-                        placeholder="—"
+                        placeholder={m.picked_by ?? "—"}
                       />
+                      {m.picked_by && !m.picked_by_user_id && (
+                        <div className="mt-1 text-[11px] font-medium text-muted-foreground">
+                          {m.picked_by}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-3">
                       {m.is_current ? (
