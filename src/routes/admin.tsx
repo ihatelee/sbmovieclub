@@ -275,6 +275,7 @@ function AdminPage() {
         open={searchOpen}
         onOpenChange={setSearchOpen}
         existingTmdbIds={new Set(movies.map((m) => m.tmdb_id).filter(Boolean) as number[])}
+        profiles={profiles}
         onAdded={() => {
           void refreshMovies();
         }}
