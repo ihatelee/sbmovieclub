@@ -190,16 +190,19 @@ function ProfilePage() {
       {/* Still to watch */}
       {!loading && unwatchedMovies.length > 0 && (
         <section className="mx-auto max-w-7xl px-6 py-12">
-          <div className="mb-6">
-            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">
-              The Queue
-            </span>
-            <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">
-              Still to watch
-            </h2>
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">
+                The Queue
+              </span>
+              <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">
+                Still to watch
+              </h2>
+            </div>
+            <SortDropdown value={queueSort} onChange={setQueueSort} />
           </div>
           <MoviesTable
-            movies={unwatchedMovies}
+            movies={sortMovies(unwatchedMovies, watchersByMovie, queueSort)}
             watchersByMovie={watchersByMovie}
             myWatchByMovie={myWatchByMovie}
             profileById={profileById}
@@ -211,13 +214,18 @@ function ProfilePage() {
 
       {/* Your ratings */}
       <section className="mx-auto max-w-7xl px-6 pb-20 pt-4">
-        <div className="mb-6">
-          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">
-            The Reel
-          </span>
-          <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">
-            Your ratings
-          </h2>
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <div>
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">
+              The Reel
+            </span>
+            <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">
+              Your ratings
+            </h2>
+          </div>
+          {watchedMovies.length > 0 && (
+            <SortDropdown value={reelSort} onChange={setReelSort} />
+          )}
         </div>
 
         {loading ? (
@@ -228,7 +236,7 @@ function ProfilePage() {
           </p>
         ) : (
           <MoviesTable
-            movies={watchedMovies}
+            movies={sortMovies(watchedMovies, watchersByMovie, reelSort)}
             watchersByMovie={watchersByMovie}
             myWatchByMovie={myWatchByMovie}
             profileById={profileById}
