@@ -690,6 +690,7 @@ function AddMovieDialog({
         rt_score: rtScore,
         tmdb_rating: details.vote_average ?? null,
         is_current: false,
+        picked_by_user_id: pickerId,
       });
       if (error) throw error;
 
