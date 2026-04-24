@@ -140,6 +140,9 @@ function AllMoviesPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-6 py-12">
+        <div className="mb-4 flex items-center justify-end">
+          <SortDropdown value={sort} onChange={setSort} />
+        </div>
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -160,14 +163,14 @@ function AllMoviesPage() {
                       Loading…
                     </td>
                   </tr>
-                ) : movies.length === 0 ? (
+                ) : sortedMovies.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
                       No movies yet.
                     </td>
                   </tr>
                 ) : (
-                  movies.map((m) => {
+                  sortedMovies.map((m) => {
                     const ws = watchersByMovie.get(m.id) ?? [];
                     const rated = ws
                       .map((w) => w.rating)
