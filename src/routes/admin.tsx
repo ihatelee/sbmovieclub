@@ -316,6 +316,7 @@ function ScreeningsTable({
   loading,
   onSetCurrent,
   onDelete,
+  onSetPicker,
 }: {
   movies: MovieRow[];
   ratingsByMovie: Record<string, { avg: number; count: number }>;
@@ -323,12 +324,15 @@ function ScreeningsTable({
   loading: boolean;
   onSetCurrent: (id: string) => void;
   onDelete: (id: string, title: string) => void;
+  onSetPicker: (movieId: string, pickerId: string | null) => void;
 }) {
-  const profileById = useMemo(() => {
-    const m = new Map<string, ProfileRow>();
-    for (const p of profiles) m.set(p.id, p);
-    return m;
-  }, [profiles]);
+  const pickerProfiles = useMemo(
+    () =>
+      profiles
+        .filter((p) => p.is_approved)
+        .map((p) => ({ id: p.id, first_name: p.first_name, avatar_url: p.avatar_url })),
+    [profiles]
+  );
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card">
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
