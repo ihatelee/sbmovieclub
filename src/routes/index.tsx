@@ -413,60 +413,26 @@ function HomePage() {
   );
 }
 
-function HeroRating({ movieId, userId }: { movieId: string; userId: string }) {
+function HeroRating({
+  movieId,
+  userId,
+  onChange,
+}: {
+  movieId: string;
+  userId: string;
+  onChange?: (next: { rating: number | null; watched: boolean }) => void;
+}) {
   const [rating, setRating] = useState(0);
-  const [watched, setWatched] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("watches")
-        .select("rating")
-        .eq("user_id", userId)
-        .eq("movie_id", movieId)
-        .maybeSingle();
-      if (cancelled) return;
-      if (error) {
-        console.error("[hero-rating] fetch:", error.message);
-      } else if (data) {
-        setWatched(true);
-        setRating(typeof data.rating === "number" ? data.rating : 0);
-      }
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [movieId, userId]);
-
-  const handleChange = async (n: number) => {
-    setRating(n);
-    // If already watched, persist the rating change immediately.
-    if (watched) {
-      const { error } = await supabase
-        .from("watches")
-        .upsert(
-          { user_id: userId, movie_id: movieId, rating: n },
-          { onConflict: "user_id,movie_id" }
-        );
-      if (error) {
-        console.error("[hero-rating] update:", error.message);
-        toast.error("Couldn't save rating", { description: error.message });
-      }
-    }
-  };
 
   const handleMarkWatched = async () => {
     setSaving(true);
+    const finalRating = rating > 0 ? rating : null;
     const { error } = await supabase.from("watches").upsert(
       {
         user_id: userId,
         movie_id: movieId,
-        rating: rating > 0 ? rating : null,
+        rating: finalRating,
       },
       { onConflict: "user_id,movie_id" }
     );
@@ -476,18 +442,16 @@ function HeroRating({ movieId, userId }: { movieId: string; userId: string }) {
       toast.error("Couldn't mark as watched", { description: error.message });
       return;
     }
-    setWatched(true);
+    onChange?.({ rating: finalRating, watched: true });
     toast.success("Marked as watched");
   };
-
-  if (loading) return null;
 
   return (
     <RatingBar
       rating={rating}
-      onChange={handleChange}
+      onChange={setRating}
       onMarkWatched={handleMarkWatched}
-      watched={watched}
+      watched={false}
       saving={saving}
     />
   );
