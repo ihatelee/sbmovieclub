@@ -79,6 +79,7 @@ function HomePage() {
 
   const [current, setCurrent] = useState<MovieRow | null>(null);
   const [recent, setRecent] = useState<MovieRow[]>([]);
+  const [profiles, setProfiles] = useState<ProfileLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [heroImgFailed, setHeroImgFailed] = useState(false);
 
@@ -86,7 +87,7 @@ function HomePage() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [currentRes, recentRes] = await Promise.all([
+      const [currentRes, recentRes, profilesRes] = await Promise.all([
         supabase
           .from("movies")
           .select(MOVIE_COLUMNS)
@@ -98,6 +99,9 @@ function HomePage() {
           .eq("is_current", false)
           .order("order_index", { ascending: false })
           .limit(15),
+        supabase
+          .from("profiles")
+          .select("id, first_name, avatar_url"),
       ]);
 
       if (cancelled) return;
@@ -108,15 +112,29 @@ function HomePage() {
       if (recentRes.error) {
         console.error("[home] recent movies:", recentRes.error.message);
       }
+      if (profilesRes.error) {
+        console.error("[home] profiles:", profilesRes.error.message);
+      }
 
       setCurrent((currentRes.data as MovieRow | null) ?? null);
       setRecent((recentRes.data as MovieRow[] | null) ?? []);
+      setProfiles((profilesRes.data as ProfileLite[] | null) ?? []);
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  const profileById = useMemo(() => {
+    const m = new Map<string, ProfileLite>();
+    for (const p of profiles) m.set(p.id, p);
+    return m;
+  }, [profiles]);
+
+  const currentPicker = current?.picked_by_user_id
+    ? profileById.get(current.picked_by_user_id) ?? null
+    : null;
 
   return (
     <div className="min-h-screen bg-background">
