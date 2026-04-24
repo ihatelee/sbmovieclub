@@ -34,6 +34,7 @@ type MovieRow = {
   is_current: boolean;
   added_at: string;
   picked_by_user_id: string | null;
+  picked_by: string | null;
 };
 
 type ProfileRow = {
@@ -87,7 +88,7 @@ function AdminPage() {
       supabase
         .from("movies")
         .select(
-          "id, tmdb_id, imdb_id, title, year, poster_url, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id"
+          "id, tmdb_id, imdb_id, title, year, poster_url, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id, picked_by"
         )
         .order("order_index", { ascending: false }),
       supabase.from("watches").select("movie_id, rating"),
@@ -397,8 +398,13 @@ function ScreeningsTable({
                         value={m.picked_by_user_id}
                         onChange={(id) => onSetPicker(m.id, id)}
                         size="sm"
-                        placeholder="—"
+                        placeholder={m.picked_by ?? "—"}
                       />
+                      {m.picked_by && !m.picked_by_user_id && (
+                        <div className="mt-1 text-[11px] font-medium text-muted-foreground">
+                          {m.picked_by}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-3">
                       {m.is_current ? (

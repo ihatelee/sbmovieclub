@@ -36,6 +36,7 @@ type MovieRow = {
   is_current: boolean;
   added_at: string;
   picked_by_user_id: string | null;
+  picked_by: string | null;
 };
 
 type ProfileLite = {
@@ -50,7 +51,7 @@ type WatchRow = {
 };
 
 const MOVIE_COLUMNS =
-  "id, tmdb_id, title, year, poster_url, overview, runtime, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id";
+  "id, tmdb_id, title, year, poster_url, overview, runtime, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id, picked_by";
 
 function RatingPill({
   label,
@@ -237,6 +238,12 @@ function HomePage() {
                     <>
                       <span aria-hidden>•</span>
                       <span>{current.runtime} min</span>
+                    </>
+                  )}
+                  {current.picked_by && (
+                    <>
+                      <span aria-hidden>•</span>
+                      <span>Picked by {current.picked_by}</span>
                     </>
                   )}
                 </div>

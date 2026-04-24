@@ -20,6 +20,7 @@ type MovieRow = {
   is_current: boolean;
   added_at: string;
   picked_by_user_id: string | null;
+  picked_by: string | null;
 };
 
 type WatcherRow = {
@@ -73,7 +74,7 @@ function MovieDetail() {
         supabase
           .from("movies")
           .select(
-            "id, title, year, poster_url, overview, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id"
+            "id, title, year, poster_url, overview, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id, picked_by"
           )
           .eq("id", movieId)
           .maybeSingle(),
@@ -223,15 +224,26 @@ function MovieDetail() {
                     const picker = movie.picked_by_user_id
                       ? watchers.find((w) => w.id === movie.picked_by_user_id)
                       : null;
-                    return picker ? (
-                      <PickedBy
-                        picker={{
-                          first_name: picker.first_name,
-                          avatar_url: picker.avatar_url,
-                        }}
-                        size="md"
-                      />
-                    ) : null;
+                    if (picker) {
+                      return (
+                        <PickedBy
+                          picker={{
+                            first_name: picker.first_name,
+                            avatar_url: picker.avatar_url,
+                          }}
+                          size="md"
+                        />
+                      );
+                    }
+                    if (movie.picked_by) {
+                      return (
+                        <span className="inline-flex items-center gap-2 rounded-full bg-secondary/80 px-3 py-1.5 text-xs font-bold">
+                          <span className="text-muted-foreground">Picked by</span>
+                          <span>{movie.picked_by}</span>
+                        </span>
+                      );
+                    }
+                    return null;
                   })()}
                   {movie.imdb_rating != null && (
                     <Pill
