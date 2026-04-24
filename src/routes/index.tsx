@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/SiteHeader";
 import { MovieCard } from "@/components/MovieCard";
 import { RatingBar } from "@/components/RatingBar";
+import { PickedBy } from "@/components/PickedBy";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -33,10 +34,17 @@ type MovieRow = {
   tmdb_rating: number | null;
   is_current: boolean;
   added_at: string;
+  picked_by_user_id: string | null;
+};
+
+type ProfileLite = {
+  id: string;
+  first_name: string | null;
+  avatar_url: string | null;
 };
 
 const MOVIE_COLUMNS =
-  "id, tmdb_id, title, year, poster_url, overview, runtime, imdb_rating, rt_score, tmdb_rating, is_current, added_at";
+  "id, tmdb_id, title, year, poster_url, overview, runtime, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id";
 
 function RatingPill({
   label,
@@ -71,6 +79,7 @@ function HomePage() {
 
   const [current, setCurrent] = useState<MovieRow | null>(null);
   const [recent, setRecent] = useState<MovieRow[]>([]);
+  const [profiles, setProfiles] = useState<ProfileLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [heroImgFailed, setHeroImgFailed] = useState(false);
 
@@ -78,7 +87,7 @@ function HomePage() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [currentRes, recentRes] = await Promise.all([
+      const [currentRes, recentRes, profilesRes] = await Promise.all([
         supabase
           .from("movies")
           .select(MOVIE_COLUMNS)
@@ -90,6 +99,9 @@ function HomePage() {
           .eq("is_current", false)
           .order("order_index", { ascending: false })
           .limit(15),
+        supabase
+          .from("profiles")
+          .select("id, first_name, avatar_url"),
       ]);
 
       if (cancelled) return;
@@ -100,15 +112,29 @@ function HomePage() {
       if (recentRes.error) {
         console.error("[home] recent movies:", recentRes.error.message);
       }
+      if (profilesRes.error) {
+        console.error("[home] profiles:", profilesRes.error.message);
+      }
 
       setCurrent((currentRes.data as MovieRow | null) ?? null);
       setRecent((recentRes.data as MovieRow[] | null) ?? []);
+      setProfiles((profilesRes.data as ProfileLite[] | null) ?? []);
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  const profileById = useMemo(() => {
+    const m = new Map<string, ProfileLite>();
+    for (const p of profiles) m.set(p.id, p);
+    return m;
+  }, [profiles]);
+
+  const currentPicker = current?.picked_by_user_id
+    ? profileById.get(current.picked_by_user_id) ?? null
+    : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -175,6 +201,12 @@ function HomePage() {
                     </>
                   )}
                 </div>
+
+                {currentPicker && (
+                  <div className="mt-4">
+                    <PickedBy picker={currentPicker} size="md" />
+                  </div>
+                )}
 
                 <div className="mt-5 flex flex-wrap gap-2">
                   {formatRating(current.imdb_rating, "imdb") && (
@@ -275,6 +307,11 @@ function HomePage() {
                   runtime: m.runtime ?? 0,
                   watchedAt: m.added_at,
                 }}
+                picker={
+                  m.picked_by_user_id
+                    ? profileById.get(m.picked_by_user_id) ?? null
+                    : null
+                }
               />
             ))}
           </div>

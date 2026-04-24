@@ -1,5 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import type { Movie } from "@/lib/mock-movies";
+import { PickedBy } from "@/components/PickedBy";
+
+type Picker = { first_name: string | null; avatar_url: string | null };
 
 // Deterministic gradient pair based on movie id
 const gradients = [
@@ -19,9 +22,11 @@ function gradientFor(id: string) {
 export function MovieCard({
   movie,
   userRating,
+  picker,
 }: {
   movie: Movie;
   userRating?: number;
+  picker?: Picker | null;
 }) {
   const [a, b] = gradientFor(movie.id);
   const showRating =
@@ -73,6 +78,11 @@ export function MovieCard({
         <p className="mt-0.5 text-xs font-medium text-muted-foreground">
           {movie.year}
         </p>
+        {picker && (
+          <div className="mt-2">
+            <PickedBy picker={picker} size="sm" />
+          </div>
+        )}
       </div>
     </Link>
   );

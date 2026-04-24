@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Check, Film, Loader2, Plus, Search, Star, Trash2, Users, X } from "lucide-react";
 
 import { SiteHeader } from "@/components/SiteHeader";
+import { PickedBy } from "@/components/PickedBy";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,6 +33,7 @@ type MovieRow = {
   tmdb_rating: number | null;
   is_current: boolean;
   added_at: string;
+  picked_by_user_id: string | null;
 };
 
 type ProfileRow = {
@@ -40,6 +42,7 @@ type ProfileRow = {
   email: string | null;
   is_approved: boolean;
   is_admin: boolean;
+  avatar_url: string | null;
 };
 
 type TmdbSearchResult = {
@@ -84,7 +87,7 @@ function AdminPage() {
       supabase
         .from("movies")
         .select(
-          "id, tmdb_id, imdb_id, title, year, poster_url, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at"
+          "id, tmdb_id, imdb_id, title, year, poster_url, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id"
         )
         .order("order_index", { ascending: false }),
       supabase.from("watches").select("movie_id, rating"),
@@ -120,7 +123,7 @@ function AdminPage() {
     setProfilesError(null);
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, first_name, email, is_approved, is_admin")
+      .select("id, first_name, email, is_approved, is_admin, avatar_url")
       .order("first_name", { ascending: true });
     if (error) {
       setProfilesError(error.message);
@@ -234,6 +237,7 @@ function AdminPage() {
             <ScreeningsTable
               movies={movies}
               ratingsByMovie={ratingsByMovie}
+              profiles={profiles}
               loading={loadingMovies}
               onSetCurrent={handleSetCurrent}
               onDelete={handleDelete}
@@ -292,16 +296,23 @@ function Stat({
 function ScreeningsTable({
   movies,
   ratingsByMovie,
+  profiles,
   loading,
   onSetCurrent,
   onDelete,
 }: {
   movies: MovieRow[];
   ratingsByMovie: Record<string, { avg: number; count: number }>;
+  profiles: ProfileRow[];
   loading: boolean;
   onSetCurrent: (id: string) => void;
   onDelete: (id: string, title: string) => void;
 }) {
+  const profileById = useMemo(() => {
+    const m = new Map<string, ProfileRow>();
+    for (const p of profiles) m.set(p.id, p);
+    return m;
+  }, [profiles]);
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card">
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
@@ -317,6 +328,7 @@ function ScreeningsTable({
             <tr>
               <th className="px-6 py-3">Title</th>
               <th className="px-6 py-3">Year</th>
+              <th className="px-6 py-3">Picked by</th>
               <th className="px-6 py-3">Status</th>
               <th className="px-6 py-3">Avg rating</th>
               <th className="px-6 py-3 text-right">Actions</th>
@@ -325,13 +337,13 @@ function ScreeningsTable({
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">
+                <td colSpan={6} className="px-6 py-10 text-center text-muted-foreground">
                   <Loader2 className="mx-auto h-5 w-5 animate-spin" />
                 </td>
               </tr>
             ) : movies.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-10 text-center text-sm text-muted-foreground">
+                <td colSpan={6} className="px-6 py-10 text-center text-sm text-muted-foreground">
                   No movies yet — hit “Add movie” to log your first screening.
                 </td>
               </tr>
@@ -358,6 +370,20 @@ function ScreeningsTable({
                       </div>
                     </td>
                     <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
+                    <td className="px-6 py-3">
+                      {(() => {
+                        const picker = m.picked_by_user_id
+                          ? profileById.get(m.picked_by_user_id)
+                          : null;
+                        return picker ? (
+                          <PickedBy picker={picker} size="sm" bare />
+                        ) : (
+                          <span className="text-xs font-medium text-muted-foreground">
+                            —
+                          </span>
+                        );
+                      })()}
+                    </td>
                     <td className="px-6 py-3">
                       {m.is_current ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-primary">

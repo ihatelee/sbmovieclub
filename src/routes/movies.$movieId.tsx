@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { UserAvatar } from "@/components/UserAvatar";
+import { PickedBy } from "@/components/PickedBy";
 import { supabase } from "@/lib/supabase";
 
 type MovieRow = {
@@ -18,6 +19,7 @@ type MovieRow = {
   tmdb_rating: number | null;
   is_current: boolean;
   added_at: string;
+  picked_by_user_id: string | null;
 };
 
 type WatcherRow = {
@@ -71,7 +73,7 @@ function MovieDetail() {
         supabase
           .from("movies")
           .select(
-            "id, title, year, poster_url, overview, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at"
+            "id, title, year, poster_url, overview, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id"
           )
           .eq("id", movieId)
           .maybeSingle(),
@@ -217,6 +219,20 @@ function MovieDetail() {
                       🎬 Currently watching
                     </span>
                   )}
+                  {(() => {
+                    const picker = movie.picked_by_user_id
+                      ? watchers.find((w) => w.id === movie.picked_by_user_id)
+                      : null;
+                    return picker ? (
+                      <PickedBy
+                        picker={{
+                          first_name: picker.first_name,
+                          avatar_url: picker.avatar_url,
+                        }}
+                        size="md"
+                      />
+                    ) : null;
+                  })()}
                   {movie.imdb_rating != null && (
                     <Pill
                       label="IMDb"

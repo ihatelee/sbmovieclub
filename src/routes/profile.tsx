@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { UserAvatar } from "@/components/UserAvatar";
 import { QuickRate } from "@/components/QuickRate";
+import { PickedBy } from "@/components/PickedBy";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
@@ -24,6 +25,7 @@ type MovieRow = {
   imdb_rating: number | null;
   rt_score: number | null;
   is_current: boolean;
+  picked_by_user_id: string | null;
 };
 
 type WatchRow = {
@@ -53,7 +55,7 @@ function ProfilePage() {
       const [mRes, wRes, pRes] = await Promise.all([
         supabase
           .from("movies")
-          .select("id, title, year, poster_url, imdb_rating, rt_score, is_current")
+          .select("id, title, year, poster_url, imdb_rating, rt_score, is_current, picked_by_user_id")
           .order("order_index", { ascending: false }),
         supabase.from("watches").select("user_id, movie_id, rating"),
         supabase
@@ -262,6 +264,7 @@ function MoviesTable({
             <tr>
               <th className="px-6 py-3">Title</th>
               <th className="px-6 py-3">Year</th>
+              <th className="px-6 py-3">Picked by</th>
               <th className="px-6 py-3">Ratings</th>
               <th className="px-6 py-3">Avg</th>
               <th className="px-6 py-3">Watched by</th>
@@ -308,6 +311,20 @@ function MoviesTable({
                     </Link>
                   </td>
                   <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
+                  <td className="px-6 py-3">
+                    {(() => {
+                      const picker = m.picked_by_user_id
+                        ? profileById.get(m.picked_by_user_id)
+                        : null;
+                      return picker ? (
+                        <PickedBy picker={picker} size="sm" bare />
+                      ) : (
+                        <span className="text-xs font-medium text-muted-foreground">
+                          —
+                        </span>
+                      );
+                    })()}
+                  </td>
                   <td className="px-6 py-3">
                     <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
                       {m.imdb_rating != null && (
