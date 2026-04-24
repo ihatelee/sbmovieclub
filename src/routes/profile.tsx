@@ -270,8 +270,34 @@ function MoviesTable({
   ) => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="overflow-x-auto">
+    <>
+      {/* Mobile list */}
+      <div className="overflow-hidden rounded-2xl border border-border bg-card md:hidden">
+        {movies.length === 0 ? (
+          <div className="px-4 py-12 text-center text-muted-foreground">No movies.</div>
+        ) : (
+          movies.map((m) => {
+            const ws = watchersByMovie.get(m.id) ?? [];
+            const mine = myWatchByMovie.get(m.id);
+            return (
+              <MobileMovieRow
+                key={m.id}
+                movie={m}
+                watchers={ws}
+                myRating={mine?.rating ?? null}
+                iWatched={!!mine}
+                profileById={profileById}
+                userId={userId}
+                onChange={(next) => onChange(m.id, next)}
+              />
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden overflow-hidden rounded-2xl border border-border bg-card md:block">
+        <div className="overflow-x-auto">
         <table className="w-full table-fixed text-sm">
           <colgroup>
             <col className="w-auto" />
