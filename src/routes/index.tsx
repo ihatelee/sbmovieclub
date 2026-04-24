@@ -307,6 +307,11 @@ function HomePage() {
                   runtime: m.runtime ?? 0,
                   watchedAt: m.added_at,
                 }}
+                picker={
+                  m.picked_by_user_id
+                    ? profileById.get(m.picked_by_user_id) ?? null
+                    : null
+                }
               />
             ))}
           </div>
