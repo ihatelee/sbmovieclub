@@ -317,6 +317,7 @@ function ScreeningsTable({
             <tr>
               <th className="px-6 py-3">Title</th>
               <th className="px-6 py-3">Year</th>
+              <th className="px-6 py-3">Avg rating</th>
               <th className="px-6 py-3">Status</th>
               <th className="px-6 py-3 text-right">Actions</th>
             </tr>
