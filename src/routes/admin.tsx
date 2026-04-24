@@ -90,6 +90,29 @@ function AdminPage() {
       setMovies((data as MovieRow[]) ?? []);
     }
     setLoadingMovies(false);
+
+    // Fetch all watch ratings and aggregate by movie.
+    const watchesRes = await supabase
+      .from("watches")
+      .select("movie_id, rating");
+    if (watchesRes.error) {
+      console.error("[admin] watches:", watchesRes.error.message);
+      setRatingsByMovie({});
+    } else {
+      const sums: Record<string, { sum: number; count: number }> = {};
+      for (const w of (watchesRes.data ?? []) as { movie_id: string; rating: number | null }[]) {
+        if (typeof w.rating !== "number" || w.rating <= 0) continue;
+        const s = sums[w.movie_id] ?? { sum: 0, count: 0 };
+        s.sum += w.rating;
+        s.count += 1;
+        sums[w.movie_id] = s;
+      }
+      const out: Record<string, { avg: number; count: number }> = {};
+      for (const [id, { sum, count }] of Object.entries(sums)) {
+        out[id] = { avg: sum / count, count };
+      }
+      setRatingsByMovie(out);
+    }
   };
 
   const refreshProfiles = async () => {
