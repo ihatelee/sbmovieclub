@@ -70,6 +70,7 @@ export const Route = createFileRoute("/admin")({
 function AdminPage() {
   const [movies, setMovies] = useState<MovieRow[]>([]);
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
+  const [ratingsByMovie, setRatingsByMovie] = useState<Record<string, { avg: number; count: number }>>({});
   const [loadingMovies, setLoadingMovies] = useState(true);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [profilesError, setProfilesError] = useState<string | null>(null);
@@ -82,13 +83,36 @@ function AdminPage() {
       .select(
         "id, tmdb_id, imdb_id, title, year, poster_url, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at"
       )
-      .order("order_index", { ascending: true });
+      .order("order_index", { ascending: false });
     if (error) {
       toast.error("Failed to load movies", { description: error.message });
     } else {
       setMovies((data as MovieRow[]) ?? []);
     }
     setLoadingMovies(false);
+
+    // Fetch all watch ratings and aggregate by movie.
+    const watchesRes = await supabase
+      .from("watches")
+      .select("movie_id, rating");
+    if (watchesRes.error) {
+      console.error("[admin] watches:", watchesRes.error.message);
+      setRatingsByMovie({});
+    } else {
+      const sums: Record<string, { sum: number; count: number }> = {};
+      for (const w of (watchesRes.data ?? []) as { movie_id: string; rating: number | null }[]) {
+        if (typeof w.rating !== "number" || w.rating <= 0) continue;
+        const s = sums[w.movie_id] ?? { sum: 0, count: 0 };
+        s.sum += w.rating;
+        s.count += 1;
+        sums[w.movie_id] = s;
+      }
+      const out: Record<string, { avg: number; count: number }> = {};
+      for (const [id, { sum, count }] of Object.entries(sums)) {
+        out[id] = { avg: sum / count, count };
+      }
+      setRatingsByMovie(out);
+    }
   };
 
   const refreshProfiles = async () => {
@@ -209,6 +233,7 @@ function AdminPage() {
           <TabsContent value="screenings" className="mt-6">
             <ScreeningsTable
               movies={movies}
+              ratingsByMovie={ratingsByMovie}
               loading={loadingMovies}
               onSetCurrent={handleSetCurrent}
               onDelete={handleDelete}
@@ -266,11 +291,13 @@ function Stat({
 
 function ScreeningsTable({
   movies,
+  ratingsByMovie,
   loading,
   onSetCurrent,
   onDelete,
 }: {
   movies: MovieRow[];
+  ratingsByMovie: Record<string, { avg: number; count: number }>;
   loading: boolean;
   onSetCurrent: (id: string) => void;
   onDelete: (id: string, title: string) => void;
@@ -290,6 +317,7 @@ function ScreeningsTable({
             <tr>
               <th className="px-6 py-3">Title</th>
               <th className="px-6 py-3">Year</th>
+              <th className="px-6 py-3">Avg rating</th>
               <th className="px-6 py-3">Status</th>
               <th className="px-6 py-3 text-right">Actions</th>
             </tr>
@@ -297,18 +325,20 @@ function ScreeningsTable({
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-6 py-10 text-center text-muted-foreground">
+                <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">
                   <Loader2 className="mx-auto h-5 w-5 animate-spin" />
                 </td>
               </tr>
             ) : movies.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-10 text-center text-sm text-muted-foreground">
+                <td colSpan={5} className="px-6 py-10 text-center text-sm text-muted-foreground">
                   No movies yet — hit “Add movie” to log your first screening.
                 </td>
               </tr>
             ) : (
-              movies.map((m) => (
+              movies.map((m) => {
+                const r = ratingsByMovie[m.id];
+                return (
                 <tr
                   key={m.id}
                   className="border-b border-border last:border-0 transition-colors hover:bg-secondary/60"
@@ -328,6 +358,20 @@ function ScreeningsTable({
                     </div>
                   </td>
                   <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
+                  <td className="px-6 py-3">
+                    {r ? (
+                      <span className="text-sm font-bold">
+                        🍿 {r.avg.toFixed(1)}/5
+                        <span className="ml-1 text-xs font-medium text-muted-foreground">
+                          ({r.count})
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium text-muted-foreground">
+                        No ratings yet
+                      </span>
+                    )}
+                  </td>
                   <td className="px-6 py-3">
                     {m.is_current ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-primary">
@@ -359,7 +403,8 @@ function ScreeningsTable({
                     </div>
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>
