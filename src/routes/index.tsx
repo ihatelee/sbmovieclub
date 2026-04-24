@@ -86,6 +86,7 @@ function HomePage() {
   const [current, setCurrent] = useState<MovieRow | null>(null);
   const [recent, setRecent] = useState<MovieRow[]>([]);
   const [profiles, setProfiles] = useState<ProfileLite[]>([]);
+  const [watches, setWatches] = useState<WatchRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [heroImgFailed, setHeroImgFailed] = useState(false);
 
@@ -122,9 +123,24 @@ function HomePage() {
         console.error("[home] profiles:", profilesRes.error.message);
       }
 
-      setCurrent((currentRes.data as MovieRow | null) ?? null);
+      const currentMovie = (currentRes.data as MovieRow | null) ?? null;
+      setCurrent(currentMovie);
       setRecent((recentRes.data as MovieRow[] | null) ?? []);
       setProfiles((profilesRes.data as ProfileLite[] | null) ?? []);
+
+      if (currentMovie) {
+        const watchesRes = await supabase
+          .from("watches")
+          .select("user_id, rating")
+          .eq("movie_id", currentMovie.id);
+        if (!cancelled) {
+          if (watchesRes.error) {
+            console.error("[home] watches:", watchesRes.error.message);
+          }
+          setWatches((watchesRes.data as WatchRow[] | null) ?? []);
+        }
+      }
+
       setLoading(false);
     })();
     return () => {
@@ -141,6 +157,23 @@ function HomePage() {
   const currentPicker = current?.picked_by_user_id
     ? profileById.get(current.picked_by_user_id) ?? null
     : null;
+
+  const watchedRows = useMemo(
+    () =>
+      watches
+        .map((w) => ({ ...w, profile: profileById.get(w.user_id) ?? null }))
+        .filter((w) => w.profile !== null),
+    [watches, profileById]
+  );
+
+  const handleWatchChange = (next: { rating: number | null; watched: boolean }) => {
+    if (!session?.user) return;
+    const userId = session.user.id;
+    setWatches((prev) => {
+      const without = prev.filter((w) => w.user_id !== userId);
+      return next.watched ? [...without, { user_id: userId, rating: next.rating }] : without;
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
