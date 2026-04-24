@@ -70,6 +70,7 @@ export const Route = createFileRoute("/admin")({
 function AdminPage() {
   const [movies, setMovies] = useState<MovieRow[]>([]);
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
+  const [ratingsByMovie, setRatingsByMovie] = useState<Record<string, { avg: number; count: number }>>({});
   const [loadingMovies, setLoadingMovies] = useState(true);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [profilesError, setProfilesError] = useState<string | null>(null);
