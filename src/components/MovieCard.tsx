@@ -78,6 +78,11 @@ export function MovieCard({
         <p className="mt-0.5 text-xs font-medium text-muted-foreground">
           {movie.year}
         </p>
+        {picker && (
+          <div className="mt-2">
+            <PickedBy picker={picker} size="sm" />
+          </div>
+        )}
       </div>
     </Link>
   );
