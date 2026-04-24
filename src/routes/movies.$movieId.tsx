@@ -73,7 +73,7 @@ function MovieDetail() {
         supabase
           .from("movies")
           .select(
-            "id, title, year, poster_url, overview, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at"
+            "id, title, year, poster_url, overview, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id"
           )
           .eq("id", movieId)
           .maybeSingle(),
