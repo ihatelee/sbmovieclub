@@ -291,11 +291,13 @@ function Stat({
 
 function ScreeningsTable({
   movies,
+  ratingsByMovie,
   loading,
   onSetCurrent,
   onDelete,
 }: {
   movies: MovieRow[];
+  ratingsByMovie: Record<string, { avg: number; count: number }>;
   loading: boolean;
   onSetCurrent: (id: string) => void;
   onDelete: (id: string, title: string) => void;
