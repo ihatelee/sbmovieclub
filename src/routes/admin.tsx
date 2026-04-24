@@ -33,6 +33,7 @@ type MovieRow = {
   tmdb_rating: number | null;
   is_current: boolean;
   added_at: string;
+  picked_by_user_id: string | null;
 };
 
 type ProfileRow = {
