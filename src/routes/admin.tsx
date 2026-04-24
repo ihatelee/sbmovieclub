@@ -69,6 +69,9 @@ export const Route = createFileRoute("/admin")({
 
 function AdminPage() {
   const [movies, setMovies] = useState<MovieRow[]>([]);
+  const [ratingsByMovie, setRatingsByMovie] = useState<
+    Record<string, { avg: number; count: number }>
+  >({});
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [loadingMovies, setLoadingMovies] = useState(true);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
@@ -77,16 +80,37 @@ function AdminPage() {
 
   const refreshMovies = async () => {
     setLoadingMovies(true);
-    const { data, error } = await supabase
-      .from("movies")
-      .select(
-        "id, tmdb_id, imdb_id, title, year, poster_url, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at"
-      )
-      .order("order_index", { ascending: true });
-    if (error) {
-      toast.error("Failed to load movies", { description: error.message });
+    const [moviesRes, watchesRes] = await Promise.all([
+      supabase
+        .from("movies")
+        .select(
+          "id, tmdb_id, imdb_id, title, year, poster_url, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at"
+        )
+        .order("order_index", { ascending: false }),
+      supabase.from("watches").select("movie_id, rating"),
+    ]);
+    if (moviesRes.error) {
+      toast.error("Failed to load movies", { description: moviesRes.error.message });
     } else {
-      setMovies((data as MovieRow[]) ?? []);
+      setMovies((moviesRes.data as MovieRow[]) ?? []);
+    }
+    if (watchesRes.error) {
+      console.error("[admin] watches:", watchesRes.error.message);
+      setRatingsByMovie({});
+    } else {
+      const sums: Record<string, { total: number; count: number }> = {};
+      for (const w of (watchesRes.data ?? []) as { movie_id: string; rating: number | null }[]) {
+        if (w.rating == null || w.rating <= 0) continue;
+        const cur = sums[w.movie_id] ?? { total: 0, count: 0 };
+        cur.total += w.rating;
+        cur.count += 1;
+        sums[w.movie_id] = cur;
+      }
+      const avgs: Record<string, { avg: number; count: number }> = {};
+      for (const [id, { total, count }] of Object.entries(sums)) {
+        avgs[id] = { avg: total / count, count };
+      }
+      setRatingsByMovie(avgs);
     }
     setLoadingMovies(false);
   };
