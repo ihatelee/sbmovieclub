@@ -312,6 +312,20 @@ function MoviesTable({
                   </td>
                   <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
                   <td className="px-6 py-3">
+                    {(() => {
+                      const picker = m.picked_by_user_id
+                        ? profileById.get(m.picked_by_user_id)
+                        : null;
+                      return picker ? (
+                        <PickedBy picker={picker} size="sm" bare />
+                      ) : (
+                        <span className="text-xs font-medium text-muted-foreground">
+                          —
+                        </span>
+                      );
+                    })()}
+                  </td>
+                  <td className="px-6 py-3">
                     <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
                       {m.imdb_rating != null && (
                         <span
