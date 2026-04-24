@@ -21,91 +21,28 @@ type MovieRow = {
   title: string;
   year: number | null;
   poster_url: string | null;
+  imdb_rating: number | null;
+  rt_score: number | null;
+  is_current: boolean;
 };
 
 type WatchRow = {
-  id: string;
+  user_id: string;
   movie_id: string;
   rating: number | null;
-  watched_at: string;
 };
 
-type WatchedCardData = {
-  movie: MovieRow;
-  rating: number | null;
-  watched_at: string;
+type ProfileLite = {
+  id: string;
+  first_name: string | null;
+  avatar_url: string | null;
 };
-
-function MiniCard({
-  movie,
-  rating,
-  watched,
-  userId,
-  onChange,
-}: {
-  movie: MovieRow;
-  rating: number | null;
-  watched: boolean;
-  userId?: string;
-  onChange?: (next: { rating: number | null; watched: boolean }) => void;
-}) {
-  return (
-    <div className="group">
-      <Link
-        to="/movies/$movieId"
-        params={{ movieId: movie.id }}
-        className="block"
-      >
-        <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-secondary shadow-[var(--shadow-poster)] transition-transform duration-300 group-hover:-translate-y-0.5">
-          {movie.poster_url ? (
-            <img
-              src={movie.poster_url}
-              alt={`${movie.title} poster`}
-              loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center p-2 text-center text-[11px] font-bold leading-tight text-white">
-              {movie.title}
-            </div>
-          )}
-        </div>
-        <div className="mt-2 px-0.5">
-          <h3
-            className="truncate font-black leading-tight tracking-tight text-white"
-            style={{ fontSize: 12 }}
-            title={movie.title}
-          >
-            {movie.title}
-          </h3>
-          <p
-            className="mt-0.5 font-medium text-muted-foreground"
-            style={{ fontSize: 11 }}
-          >
-            {movie.year ?? "—"}
-          </p>
-        </div>
-      </Link>
-      {userId && (
-        <div className="mt-1.5 px-0.5">
-          <QuickRate
-            userId={userId}
-            movieId={movie.id}
-            rating={rating}
-            watched={watched}
-            size="sm"
-            onChange={onChange}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
 
 function ProfilePage() {
   const { user, profile } = useAuth();
+  const [movies, setMovies] = useState<MovieRow[]>([]);
   const [watches, setWatches] = useState<WatchRow[]>([]);
-  const [allMovies, setAllMovies] = useState<MovieRow[]>([]);
+  const [profiles, setProfiles] = useState<ProfileLite[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -113,23 +50,26 @@ function ProfilePage() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [watchesRes, moviesRes] = await Promise.all([
-        supabase
-          .from("watches")
-          .select("id, movie_id, rating, watched_at")
-          .eq("user_id", user.id)
-          .order("watched_at", { ascending: false }),
+      const [mRes, wRes, pRes] = await Promise.all([
         supabase
           .from("movies")
-          .select("id, title, year, poster_url"),
+          .select("id, title, year, poster_url, imdb_rating, rt_score, is_current")
+          .order("order_index", { ascending: false }),
+        supabase.from("watches").select("user_id, movie_id, rating"),
+        supabase
+          .from("profiles")
+          .select("id, first_name, avatar_url, is_approved")
+          .eq("is_approved", true),
       ]);
 
       if (cancelled) return;
-      if (watchesRes.error) console.error("[profile] watches:", watchesRes.error.message);
-      if (moviesRes.error) console.error("[profile] movies:", moviesRes.error.message);
+      if (mRes.error) console.error("[profile] movies:", mRes.error.message);
+      if (wRes.error) console.error("[profile] watches:", wRes.error.message);
+      if (pRes.error) console.error("[profile] profiles:", pRes.error.message);
 
-      setWatches((watchesRes.data as WatchRow[] | null) ?? []);
-      setAllMovies((moviesRes.data as MovieRow[] | null) ?? []);
+      setMovies((mRes.data as MovieRow[] | null) ?? []);
+      setWatches((wRes.data as WatchRow[] | null) ?? []);
+      setProfiles((pRes.data as ProfileLite[] | null) ?? []);
       setLoading(false);
     })();
     return () => {
@@ -137,37 +77,45 @@ function ProfilePage() {
     };
   }, [user]);
 
-  const movieById = useMemo(() => {
-    const m = new Map<string, MovieRow>();
-    for (const movie of allMovies) m.set(movie.id, movie);
+  const profileById = useMemo(() => {
+    const m = new Map<string, ProfileLite>();
+    for (const p of profiles) m.set(p.id, p);
     return m;
-  }, [allMovies]);
+  }, [profiles]);
 
-  const watchedCards = useMemo<WatchedCardData[]>(() => {
-    return watches
-      .map((w) => {
-        const movie = movieById.get(w.movie_id);
-        return movie ? { movie, rating: w.rating, watched_at: w.watched_at } : null;
-      })
-      .filter((x): x is WatchedCardData => x !== null);
-  }, [watches, movieById]);
+  const watchersByMovie = useMemo(() => {
+    const m = new Map<string, WatchRow[]>();
+    for (const w of watches) {
+      const arr = m.get(w.movie_id) ?? [];
+      arr.push(w);
+      m.set(w.movie_id, arr);
+    }
+    return m;
+  }, [watches]);
 
-  const watchedIds = useMemo(
-    () => new Set(watches.map((w) => w.movie_id)),
-    [watches]
+  const myWatchByMovie = useMemo(() => {
+    const m = new Map<string, WatchRow>();
+    if (!user) return m;
+    for (const w of watches) if (w.user_id === user.id) m.set(w.movie_id, w);
+    return m;
+  }, [watches, user]);
+
+  const watchedMovies = useMemo(
+    () => movies.filter((m) => myWatchByMovie.has(m.id)),
+    [movies, myWatchByMovie]
   );
-  const unwatched = useMemo(
-    () => allMovies.filter((m) => !watchedIds.has(m.id)),
-    [allMovies, watchedIds]
+  const unwatchedMovies = useMemo(
+    () => movies.filter((m) => !myWatchByMovie.has(m.id)),
+    [movies, myWatchByMovie]
   );
 
-  const totalWatched = watches.length;
-  const ratings = watches
-    .map((w) => w.rating)
+  const totalWatched = watchedMovies.length;
+  const myRatings = watchedMovies
+    .map((m) => myWatchByMovie.get(m.id)?.rating)
     .filter((r): r is number => typeof r === "number" && r > 0);
   const avgRating =
-    ratings.length > 0
-      ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1)
+    myRatings.length > 0
+      ? (myRatings.reduce((a, b) => a + b, 0) / myRatings.length).toFixed(1)
       : "—";
 
   const firstName = profile?.first_name ?? "there";
@@ -176,18 +124,15 @@ function ProfilePage() {
     movieId: string,
     next: { rating: number | null; watched: boolean }
   ) => {
+    if (!user) return;
     setWatches((prev) => {
-      const without = prev.filter((w) => w.movie_id !== movieId);
+      const without = prev.filter(
+        (w) => !(w.user_id === user.id && w.movie_id === movieId)
+      );
       if (!next.watched) return without;
-      const existing = prev.find((w) => w.movie_id === movieId);
       return [
-        {
-          id: existing?.id ?? `tmp-${movieId}`,
-          movie_id: movieId,
-          rating: next.rating,
-          watched_at: existing?.watched_at ?? new Date().toISOString(),
-        },
         ...without,
+        { user_id: user.id, movie_id: movieId, rating: next.rating },
       ];
     });
   };
@@ -230,15 +175,37 @@ function ProfilePage() {
             <StatCard
               label="Avg popcorn rating"
               value={avgRating}
-              suffix={ratings.length > 0 ? "/ 5" : undefined}
+              suffix={myRatings.length > 0 ? "/ 5" : undefined}
             />
-            <StatCard label="Still to watch" value={String(unwatched.length)} />
+            <StatCard label="Still to watch" value={String(unwatchedMovies.length)} />
           </div>
         </div>
       </section>
 
+      {/* Still to watch */}
+      {!loading && unwatchedMovies.length > 0 && (
+        <section className="mx-auto max-w-7xl px-6 py-12">
+          <div className="mb-6">
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">
+              The Queue
+            </span>
+            <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">
+              Still to watch
+            </h2>
+          </div>
+          <MoviesTable
+            movies={unwatchedMovies}
+            watchersByMovie={watchersByMovie}
+            myWatchByMovie={myWatchByMovie}
+            profileById={profileById}
+            userId={user?.id}
+            onChange={handleQuickChange}
+          />
+        </section>
+      )}
+
       {/* Your ratings */}
-      <section className="mx-auto max-w-7xl px-6 py-16">
+      <section className="mx-auto max-w-7xl px-6 pb-20 pt-4">
         <div className="mb-6">
           <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">
             The Reel
@@ -250,58 +217,183 @@ function ProfilePage() {
 
         {loading ? (
           <p className="text-sm font-medium text-muted-foreground">Loading…</p>
-        ) : watchedCards.length === 0 ? (
+        ) : watchedMovies.length === 0 ? (
           <p className="text-sm font-medium text-muted-foreground">
             You haven't logged any watches yet.
           </p>
         ) : (
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
-            {watchedCards.map((c) => (
-              <MiniCard
-                key={c.movie.id}
-                movie={c.movie}
-                rating={c.rating}
-                watched
-                userId={user?.id}
-                onChange={(next) => handleQuickChange(c.movie.id, next)}
-              />
-            ))}
-          </div>
+          <MoviesTable
+            movies={watchedMovies}
+            watchersByMovie={watchersByMovie}
+            myWatchByMovie={myWatchByMovie}
+            profileById={profileById}
+            userId={user?.id}
+            onChange={handleQuickChange}
+          />
         )}
       </section>
+    </div>
+  );
+}
 
-      {/* Still to watch */}
-      <section className="mx-auto max-w-7xl px-6 pb-20">
-        <div className="mb-6">
-          <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary">
-            The Queue
-          </span>
-          <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">
-            Still to watch
-          </h2>
-        </div>
-
-        {loading ? (
-          <p className="text-sm font-medium text-muted-foreground">Loading…</p>
-        ) : unwatched.length === 0 ? (
-          <p className="text-sm font-medium text-muted-foreground">
-            You've seen everything in the archive. Bravo 🎉
-          </p>
-        ) : (
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
-            {unwatched.map((m) => (
-              <MiniCard
-                key={m.id}
-                movie={m}
-                rating={null}
-                watched={false}
-                userId={user?.id}
-                onChange={(next) => handleQuickChange(m.id, next)}
-              />
-            ))}
-          </div>
-        )}
-      </section>
+function MoviesTable({
+  movies,
+  watchersByMovie,
+  myWatchByMovie,
+  profileById,
+  userId,
+  onChange,
+}: {
+  movies: MovieRow[];
+  watchersByMovie: Map<string, WatchRow[]>;
+  myWatchByMovie: Map<string, WatchRow>;
+  profileById: Map<string, ProfileLite>;
+  userId?: string;
+  onChange: (
+    movieId: string,
+    next: { rating: number | null; watched: boolean }
+  ) => void;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="border-b border-border text-left text-xs font-black uppercase tracking-wider text-muted-foreground">
+            <tr>
+              <th className="px-6 py-3">Title</th>
+              <th className="px-6 py-3">Year</th>
+              <th className="px-6 py-3">Ratings</th>
+              <th className="px-6 py-3">Avg</th>
+              <th className="px-6 py-3">Watched by</th>
+              <th className="px-6 py-3 text-right">Your rating</th>
+            </tr>
+          </thead>
+          <tbody>
+            {movies.map((m) => {
+              const ws = watchersByMovie.get(m.id) ?? [];
+              const rated = ws
+                .map((w) => w.rating)
+                .filter((r): r is number => typeof r === "number" && r > 0);
+              const avg =
+                rated.length > 0
+                  ? rated.reduce((a, b) => a + b, 0) / rated.length
+                  : null;
+              const mine = myWatchByMovie.get(m.id);
+              return (
+                <tr
+                  key={m.id}
+                  className="border-b border-border last:border-0 transition-colors hover:bg-secondary/40"
+                >
+                  <td className="px-6 py-3">
+                    <Link
+                      to="/movies/$movieId"
+                      params={{ movieId: m.id }}
+                      className="flex items-center gap-3 font-bold hover:text-primary"
+                    >
+                      {m.poster_url ? (
+                        <img
+                          src={m.poster_url}
+                          alt=""
+                          className="h-12 w-8 flex-none rounded object-cover"
+                        />
+                      ) : (
+                        <div className="h-12 w-8 flex-none rounded bg-muted" />
+                      )}
+                      <span className="line-clamp-1">{m.title}</span>
+                      {m.is_current && (
+                        <span className="ml-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-primary">
+                          Current
+                        </span>
+                      )}
+                    </Link>
+                  </td>
+                  <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
+                  <td className="px-6 py-3">
+                    <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
+                      {m.imdb_rating != null && (
+                        <span
+                          className="rounded px-2 py-0.5"
+                          style={{ background: "rgba(245,197,24,0.18)", color: "#F5C518" }}
+                        >
+                          IMDb {m.imdb_rating.toFixed(1)}
+                        </span>
+                      )}
+                      {m.rt_score != null && (
+                        <span
+                          className="rounded px-2 py-0.5"
+                          style={{ background: "rgba(250,50,10,0.18)", color: "#FA320A" }}
+                        >
+                          RT {Math.round(m.rt_score)}%
+                        </span>
+                      )}
+                      {m.imdb_rating == null && m.rt_score == null && (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-3 font-bold">
+                    {avg != null ? (
+                      <span>
+                        🍿 {avg.toFixed(1)}
+                        <span className="ml-1 text-xs font-medium text-muted-foreground">
+                          ({rated.length})
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium text-muted-foreground">
+                        —
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-3">
+                    {ws.length === 0 ? (
+                      <span className="text-xs font-medium text-muted-foreground">
+                        No one yet
+                      </span>
+                    ) : (
+                      <div className="flex -space-x-2">
+                        {ws.slice(0, 6).map((w) => {
+                          const p = profileById.get(w.user_id);
+                          return (
+                            <UserAvatar
+                              key={w.user_id}
+                              name={p?.first_name}
+                              url={p?.avatar_url ?? null}
+                              size={28}
+                              className="ring-2 ring-card"
+                            />
+                          );
+                        })}
+                        {ws.length > 6 && (
+                          <span className="ml-2 inline-flex h-7 items-center rounded-full bg-secondary px-2 text-[11px] font-bold text-muted-foreground">
+                            +{ws.length - 6}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-3 text-right">
+                    {userId ? (
+                      <QuickRate
+                        userId={userId}
+                        movieId={m.id}
+                        rating={mine?.rating ?? null}
+                        watched={!!mine}
+                        size="sm"
+                        onChange={(next) => onChange(m.id, next)}
+                      />
+                    ) : (
+                      <Link to="/auth" className="text-xs font-bold text-primary hover:underline">
+                        Sign in to rate
+                      </Link>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
