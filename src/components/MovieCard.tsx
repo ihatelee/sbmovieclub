@@ -22,9 +22,11 @@ function gradientFor(id: string) {
 export function MovieCard({
   movie,
   userRating,
+  picker,
 }: {
   movie: Movie;
   userRating?: number;
+  picker?: Picker | null;
 }) {
   const [a, b] = gradientFor(movie.id);
   const showRating =
