@@ -48,6 +48,7 @@ type ProfileLite = {
 
 type WatchRow = {
   user_id: string;
+  movie_id: string;
   rating: number | null;
 };
 
