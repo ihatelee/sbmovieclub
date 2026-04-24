@@ -69,8 +69,10 @@ export const Route = createFileRoute("/admin")({
 
 function AdminPage() {
   const [movies, setMovies] = useState<MovieRow[]>([]);
+  const [ratingsByMovie, setRatingsByMovie] = useState<
+    Record<string, { avg: number; count: number }>
+  >({});
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
-  const [ratingsByMovie, setRatingsByMovie] = useState<Record<string, { avg: number; count: number }>>({});
   const [loadingMovies, setLoadingMovies] = useState(true);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [profilesError, setProfilesError] = useState<string | null>(null);
@@ -78,41 +80,39 @@ function AdminPage() {
 
   const refreshMovies = async () => {
     setLoadingMovies(true);
-    const { data, error } = await supabase
-      .from("movies")
-      .select(
-        "id, tmdb_id, imdb_id, title, year, poster_url, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at"
-      )
-      .order("order_index", { ascending: false });
-    if (error) {
-      toast.error("Failed to load movies", { description: error.message });
+    const [moviesRes, watchesRes] = await Promise.all([
+      supabase
+        .from("movies")
+        .select(
+          "id, tmdb_id, imdb_id, title, year, poster_url, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at"
+        )
+        .order("order_index", { ascending: false }),
+      supabase.from("watches").select("movie_id, rating"),
+    ]);
+    if (moviesRes.error) {
+      toast.error("Failed to load movies", { description: moviesRes.error.message });
     } else {
-      setMovies((data as MovieRow[]) ?? []);
+      setMovies((moviesRes.data as MovieRow[]) ?? []);
     }
-    setLoadingMovies(false);
-
-    // Fetch all watch ratings and aggregate by movie.
-    const watchesRes = await supabase
-      .from("watches")
-      .select("movie_id, rating");
     if (watchesRes.error) {
       console.error("[admin] watches:", watchesRes.error.message);
       setRatingsByMovie({});
     } else {
-      const sums: Record<string, { sum: number; count: number }> = {};
+      const sums: Record<string, { total: number; count: number }> = {};
       for (const w of (watchesRes.data ?? []) as { movie_id: string; rating: number | null }[]) {
-        if (typeof w.rating !== "number" || w.rating <= 0) continue;
-        const s = sums[w.movie_id] ?? { sum: 0, count: 0 };
-        s.sum += w.rating;
-        s.count += 1;
-        sums[w.movie_id] = s;
+        if (w.rating == null || w.rating <= 0) continue;
+        const cur = sums[w.movie_id] ?? { total: 0, count: 0 };
+        cur.total += w.rating;
+        cur.count += 1;
+        sums[w.movie_id] = cur;
       }
-      const out: Record<string, { avg: number; count: number }> = {};
-      for (const [id, { sum, count }] of Object.entries(sums)) {
-        out[id] = { avg: sum / count, count };
+      const avgs: Record<string, { avg: number; count: number }> = {};
+      for (const [id, { total, count }] of Object.entries(sums)) {
+        avgs[id] = { avg: total / count, count };
       }
-      setRatingsByMovie(out);
+      setRatingsByMovie(avgs);
     }
+    setLoadingMovies(false);
   };
 
   const refreshProfiles = async () => {
@@ -317,8 +317,8 @@ function ScreeningsTable({
             <tr>
               <th className="px-6 py-3">Title</th>
               <th className="px-6 py-3">Year</th>
-              <th className="px-6 py-3">Avg rating</th>
               <th className="px-6 py-3">Status</th>
+              <th className="px-6 py-3">Avg rating</th>
               <th className="px-6 py-3 text-right">Actions</th>
             </tr>
           </thead>
@@ -339,49 +339,47 @@ function ScreeningsTable({
               movies.map((m) => {
                 const r = ratingsByMovie[m.id];
                 return (
-                <tr
-                  key={m.id}
-                  className="border-b border-border last:border-0 transition-colors hover:bg-secondary/60"
-                >
-                  <td className="px-6 py-3 font-bold">
-                    <div className="flex items-center gap-3">
-                      {m.poster_url ? (
-                        <img
-                          src={m.poster_url}
-                          alt=""
-                          className="h-10 w-7 flex-none rounded object-cover"
-                        />
-                      ) : (
-                        <div className="h-10 w-7 flex-none rounded bg-muted" />
-                      )}
-                      <span className="line-clamp-1">{m.title}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
-                  <td className="px-6 py-3">
-                    {r ? (
-                      <span className="text-sm font-bold">
-                        🍿 {r.avg.toFixed(1)}/5
-                        <span className="ml-1 text-xs font-medium text-muted-foreground">
-                          ({r.count})
+                  <tr
+                    key={m.id}
+                    className="border-b border-border last:border-0 transition-colors hover:bg-secondary/60"
+                  >
+                    <td className="px-6 py-3 font-bold">
+                      <div className="flex items-center gap-3">
+                        {m.poster_url ? (
+                          <img
+                            src={m.poster_url}
+                            alt=""
+                            className="h-10 w-7 flex-none rounded object-cover"
+                          />
+                        ) : (
+                          <div className="h-10 w-7 flex-none rounded bg-muted" />
+                        )}
+                        <span className="line-clamp-1">{m.title}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
+                    <td className="px-6 py-3">
+                      {m.is_current ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-primary">
+                          <Star className="h-3 w-3 fill-current" /> Current
                         </span>
-                      </span>
-                    ) : (
-                      <span className="text-xs font-medium text-muted-foreground">
-                        No ratings yet
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-6 py-3">
-                    {m.is_current ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-primary">
-                        <Star className="h-3 w-3 fill-current" /> Current
-                      </span>
-                    ) : (
-                      <span className="text-xs font-medium text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-3 text-right">
+                      ) : (
+                        <span className="text-xs font-medium text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-3 text-sm font-bold">
+                      {r ? (
+                        <span>
+                          🍿 {r.avg.toFixed(1)}/5{" "}
+                          <span className="font-medium text-muted-foreground">({r.count})</span>
+                        </span>
+                      ) : (
+                        <span className="text-xs font-medium text-muted-foreground">
+                          No ratings yet
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-3 text-right">
                     <div className="inline-flex items-center gap-2">
                       {!m.is_current && (
                         <Button
@@ -402,7 +400,7 @@ function ScreeningsTable({
                       </Button>
                     </div>
                   </td>
-                </tr>
+                  </tr>
                 );
               })
             )}
