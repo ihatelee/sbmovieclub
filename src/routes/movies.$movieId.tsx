@@ -222,8 +222,9 @@ function MovieDetail() {
                     </span>
                   )}
                   {(() => {
-                    const picker = movie.picked_by_user_id
-                      ? watchers.find((w) => w.id === movie.picked_by_user_id)
+                    const pickerId = movie.picked_by_id ?? movie.picked_by_user_id;
+                    const picker = pickerId
+                      ? watchers.find((w) => w.id === pickerId)
                       : null;
                     if (picker) {
                       return (
@@ -232,16 +233,18 @@ function MovieDetail() {
                             first_name: picker.first_name,
                             avatar_url: picker.avatar_url,
                           }}
+                          linkUserId={pickerId}
                           size="md"
                         />
                       );
                     }
                     if (movie.picked_by) {
                       return (
-                        <span className="inline-flex items-center gap-2 rounded-full bg-secondary/80 px-3 py-1.5 text-xs font-bold">
-                          <span className="text-muted-foreground">Picked by</span>
-                          <span>{movie.picked_by}</span>
-                        </span>
+                        <PickedBy
+                          picker={null}
+                          fallbackName={movie.picked_by}
+                          size="md"
+                        />
                       );
                     }
                     return null;
