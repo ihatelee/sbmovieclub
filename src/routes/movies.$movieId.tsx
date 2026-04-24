@@ -2,6 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
+import { UserAvatar } from "@/components/UserAvatar";
 import { supabase } from "@/lib/supabase";
 
 type MovieRow = {
@@ -22,6 +23,7 @@ type MovieRow = {
 type WatcherRow = {
   id: string;
   first_name: string | null;
+  avatar_url: string | null;
   watched: boolean;
   rating: number | null;
 };
@@ -75,7 +77,7 @@ function MovieDetail() {
           .maybeSingle(),
         supabase
           .from("profiles")
-          .select("id, first_name, is_approved")
+          .select("id, first_name, avatar_url, is_approved")
           .eq("is_approved", true),
         supabase
           .from("watches")
@@ -97,11 +99,12 @@ function MovieDetail() {
         watchMap.set(w.user_id, w.rating);
       }
       const merged: WatcherRow[] = (
-        (profilesRes.data ?? []) as { id: string; first_name: string | null }[]
+        (profilesRes.data ?? []) as { id: string; first_name: string | null; avatar_url: string | null }[]
       )
         .map((p) => ({
           id: p.id,
           first_name: p.first_name,
+          avatar_url: p.avatar_url,
           watched: watchMap.has(p.id),
           rating: watchMap.get(p.id) ?? null,
         }))
@@ -262,16 +265,27 @@ function MovieDetail() {
               {watchers.map((w) => (
                 <div
                   key={w.id}
-                  className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-4 text-center"
+                  className={`flex flex-col items-center gap-2 rounded-2xl border border-border bg-card p-4 text-center transition-opacity ${
+                    w.watched ? "" : "opacity-60"
+                  }`}
                 >
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full text-lg font-black ${
-                      w.watched
-                        ? "bg-primary/15 text-primary"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {w.watched ? "✓" : "✗"}
+                  <div className="relative">
+                    <UserAvatar
+                      name={w.first_name}
+                      url={w.avatar_url}
+                      size={56}
+                      className={w.watched ? "" : "grayscale"}
+                    />
+                    <span
+                      className={`absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-card text-[11px] font-black ${
+                        w.watched
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                      aria-hidden
+                    >
+                      {w.watched ? "✓" : "✗"}
+                    </span>
                   </div>
                   <div className="text-sm font-bold">
                     {w.first_name ?? "Member"}
