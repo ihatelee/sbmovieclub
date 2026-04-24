@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { UserAvatar } from "@/components/UserAvatar";
+import { QuickRate } from "@/components/QuickRate";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
@@ -39,58 +40,65 @@ function MiniCard({
   movie,
   rating,
   watched,
+  userId,
+  onChange,
 }: {
   movie: MovieRow;
   rating: number | null;
   watched: boolean;
+  userId?: string;
+  onChange?: (next: { rating: number | null; watched: boolean }) => void;
 }) {
   return (
-    <Link
-      to="/movies/$movieId"
-      params={{ movieId: movie.id }}
-      className="group block"
-    >
-      <div
-        className="relative w-full overflow-hidden rounded-lg bg-secondary shadow-[var(--shadow-poster)] transition-transform duration-300 group-hover:-translate-y-0.5"
-        style={{ aspectRatio: "2 / 3", maxHeight: 180 }}
+    <div className="group">
+      <Link
+        to="/movies/$movieId"
+        params={{ movieId: movie.id }}
+        className="block"
       >
-        {movie.poster_url ? (
-          <img
-            src={movie.poster_url}
-            alt={`${movie.title} poster`}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center p-2 text-center text-[10px] font-bold leading-tight text-white">
+        <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-secondary shadow-[var(--shadow-poster)] transition-transform duration-300 group-hover:-translate-y-0.5">
+          {movie.poster_url ? (
+            <img
+              src={movie.poster_url}
+              alt={`${movie.title} poster`}
+              loading="lazy"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center p-2 text-center text-[11px] font-bold leading-tight text-white">
+              {movie.title}
+            </div>
+          )}
+        </div>
+        <div className="mt-2 px-0.5">
+          <h3
+            className="truncate font-black leading-tight tracking-tight text-white"
+            style={{ fontSize: 12 }}
+            title={movie.title}
+          >
             {movie.title}
-          </div>
-        )}
-      </div>
-      <div className="mt-1.5 px-0.5">
-        <h3
-          className="truncate font-black leading-tight tracking-tight text-white"
-          style={{ fontSize: 12 }}
-          title={movie.title}
-        >
-          {movie.title}
-        </h3>
-        <p
-          className="mt-0.5 font-medium text-muted-foreground"
-          style={{ fontSize: 11 }}
-        >
-          {movie.year ?? "—"}
-        </p>
-        {watched && (
+          </h3>
           <p
-            className="mt-0.5 font-bold text-primary"
+            className="mt-0.5 font-medium text-muted-foreground"
             style={{ fontSize: 11 }}
           >
-            {rating != null ? `🍿 ${rating}/5` : "Watched"}
+            {movie.year ?? "—"}
           </p>
-        )}
-      </div>
-    </Link>
+        </div>
+      </Link>
+      {userId && (
+        <div className="mt-1.5 px-0.5">
+          <QuickRate
+            userId={userId}
+            movieId={movie.id}
+            rating={rating}
+            watched={watched}
+            size="sm"
+            onChange={onChange}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 
