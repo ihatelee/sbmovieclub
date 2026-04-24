@@ -403,7 +403,8 @@ function ScreeningsTable({
                     </div>
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>
