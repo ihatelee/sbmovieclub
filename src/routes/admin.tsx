@@ -296,16 +296,23 @@ function Stat({
 function ScreeningsTable({
   movies,
   ratingsByMovie,
+  profiles,
   loading,
   onSetCurrent,
   onDelete,
 }: {
   movies: MovieRow[];
   ratingsByMovie: Record<string, { avg: number; count: number }>;
+  profiles: ProfileRow[];
   loading: boolean;
   onSetCurrent: (id: string) => void;
   onDelete: (id: string, title: string) => void;
 }) {
+  const profileById = useMemo(() => {
+    const m = new Map<string, ProfileRow>();
+    for (const p of profiles) m.set(p.id, p);
+    return m;
+  }, [profiles]);
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card">
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
