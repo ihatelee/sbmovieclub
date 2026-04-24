@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { UserAvatar } from "@/components/UserAvatar";
+import { PickedBy } from "@/components/PickedBy";
 import { QuickRate } from "@/components/QuickRate";
 import { SortDropdown, sortMovies, type SortKey } from "@/lib/movie-sort";
 import { useAuth } from "@/contexts/AuthContext";
@@ -77,6 +78,14 @@ function AllMoviesPage() {
   const profileById = useMemo(() => {
     const m = new Map<string, ProfileLite>();
     for (const p of profiles) m.set(p.id, p);
+    return m;
+  }, [profiles]);
+
+  const avatarByName = useMemo(() => {
+    const m = new Map<string, string | null>();
+    for (const p of profiles) {
+      if (p.first_name) m.set(p.first_name.toLowerCase(), p.avatar_url);
+    }
     return m;
   }, [profiles]);
 
@@ -220,9 +229,16 @@ function AllMoviesPage() {
                           </Link>
                         </td>
                         <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
-                        <td className="px-6 py-3 text-sm font-bold">
+                        <td className="px-6 py-3">
                           {m.picked_by ? (
-                            m.picked_by
+                            <PickedBy
+                              picker={{
+                                first_name: m.picked_by,
+                                avatar_url: avatarByName.get(m.picked_by.toLowerCase()) ?? null,
+                              }}
+                              size="sm"
+                              bare
+                            />
                           ) : (
                             <span className="text-xs font-medium text-muted-foreground">—</span>
                           )}
