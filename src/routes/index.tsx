@@ -128,6 +128,34 @@ function HomePage() {
     };
   }, []);
 
+  // Load watcher list for the current movie (separate effect so it can
+  // re-run if the current movie changes without re-fetching everything).
+  useEffect(() => {
+    if (!current?.id) {
+      setCurrentWatcherIds([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("watches")
+        .select("user_id")
+        .eq("movie_id", current.id);
+      if (cancelled) return;
+      if (error) {
+        console.error("[home] current watches:", error.message);
+        setCurrentWatcherIds([]);
+        return;
+      }
+      const ids = (data as { user_id: string }[] | null)?.map((w) => w.user_id) ?? [];
+      // De-dupe in case the table allows multiple rows per user.
+      setCurrentWatcherIds(Array.from(new Set(ids)));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [current?.id]);
+
   const profileById = useMemo(() => {
     const m = new Map<string, ProfileLite>();
     for (const p of profiles) m.set(p.id, p);
