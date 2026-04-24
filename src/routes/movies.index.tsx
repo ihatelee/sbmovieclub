@@ -45,6 +45,7 @@ function AllMoviesPage() {
   const [watches, setWatches] = useState<WatchRow[]>([]);
   const [profiles, setProfiles] = useState<ProfileLite[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState<SortKey>("chronology");
 
   const refresh = async () => {
     setLoading(true);
