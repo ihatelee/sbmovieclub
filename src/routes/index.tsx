@@ -311,7 +311,7 @@ function HomePage() {
 
                 {(() => {
                   const myWatch = session?.user
-                    ? watches.find((w) => w.user_id === session.user.id) ?? null
+                    ? watches.find((w) => w.user_id === session.user.id && current && w.movie_id === current.id) ?? null
                     : null;
                   const iWatched = myWatch !== null;
                   const myRating = myWatch?.rating ?? null;
