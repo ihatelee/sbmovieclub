@@ -86,7 +86,7 @@ function HomePage() {
           .from("movies")
           .select(MOVIE_COLUMNS)
           .eq("is_current", false)
-          .order("added_at", { ascending: false })
+          .order("order_index", { ascending: false })
           .limit(9),
       ]);
 
