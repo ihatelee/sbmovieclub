@@ -270,7 +270,16 @@ function MoviesTable({
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full table-fixed text-sm">
+          <colgroup>
+            <col className="w-auto" />
+            <col className="w-20" />
+            <col className="w-36" />
+            <col className="w-44" />
+            <col className="w-24" />
+            <col className="w-44" />
+            <col className="w-36" />
+          </colgroup>
           <thead className="border-b border-border text-left text-xs font-black uppercase tracking-wider text-muted-foreground">
             <tr>
               <th className="px-6 py-3">Title</th>
@@ -278,8 +287,8 @@ function MoviesTable({
               <th className="px-6 py-3">Picked by</th>
               <th className="px-6 py-3">Ratings</th>
               <th className="px-6 py-3">Avg</th>
-              <th className="px-6 py-3">Watched by</th>
-              <th className="px-6 py-3 text-right">Your rating</th>
+              <th className="px-6 py-3 whitespace-nowrap">Watched by</th>
+              <th className="px-6 py-3 text-right whitespace-nowrap">Your rating</th>
             </tr>
           </thead>
           <tbody>
