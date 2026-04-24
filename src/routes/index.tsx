@@ -252,9 +252,12 @@ function HomePage() {
               Recently Watched
             </h2>
           </div>
-          <p className="hidden text-sm font-medium text-muted-foreground md:block">
-            Last 9 picks
-          </p>
+          <Link
+            to="/movies"
+            className="hidden text-sm font-bold text-primary transition-colors hover:text-primary/80 md:inline-flex"
+          >
+            All movies →
+          </Link>
         </div>
 
         {recent.length > 0 ? (
