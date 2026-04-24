@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { MovieCard } from "@/components/MovieCard";
 import { RatingBar } from "@/components/RatingBar";
 import { PickedBy } from "@/components/PickedBy";
+import { WatchedAvatar } from "@/components/WatchedAvatar";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -80,6 +81,7 @@ function HomePage() {
   const [current, setCurrent] = useState<MovieRow | null>(null);
   const [recent, setRecent] = useState<MovieRow[]>([]);
   const [profiles, setProfiles] = useState<ProfileLite[]>([]);
+  const [currentWatcherIds, setCurrentWatcherIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [heroImgFailed, setHeroImgFailed] = useState(false);
 
@@ -126,6 +128,34 @@ function HomePage() {
     };
   }, []);
 
+  // Load watcher list for the current movie (separate effect so it can
+  // re-run if the current movie changes without re-fetching everything).
+  useEffect(() => {
+    if (!current?.id) {
+      setCurrentWatcherIds([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("watches")
+        .select("user_id")
+        .eq("movie_id", current.id);
+      if (cancelled) return;
+      if (error) {
+        console.error("[home] current watches:", error.message);
+        setCurrentWatcherIds([]);
+        return;
+      }
+      const ids = (data as { user_id: string }[] | null)?.map((w) => w.user_id) ?? [];
+      // De-dupe in case the table allows multiple rows per user.
+      setCurrentWatcherIds(Array.from(new Set(ids)));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [current?.id]);
+
   const profileById = useMemo(() => {
     const m = new Map<string, ProfileLite>();
     for (const p of profiles) m.set(p.id, p);
@@ -135,6 +165,14 @@ function HomePage() {
   const currentPicker = current?.picked_by_user_id
     ? profileById.get(current.picked_by_user_id) ?? null
     : null;
+
+  const currentWatchers = useMemo(
+    () =>
+      currentWatcherIds
+        .map((id) => profileById.get(id))
+        .filter((p): p is ProfileLite => !!p),
+    [currentWatcherIds, profileById]
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -250,6 +288,29 @@ function HomePage() {
 
                 {isLoggedIn && session?.user && (
                   <HeroRating movieId={current.id} userId={session.user.id} />
+                )}
+
+                {currentWatchers.length > 0 && (
+                  <div className="mt-7">
+                    <div className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
+                      Watched by
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      {currentWatchers.map((p) => (
+                        <div
+                          key={p.id}
+                          className="flex items-center gap-2 rounded-full bg-secondary/70 py-1 pl-1 pr-3 text-sm font-bold"
+                        >
+                          <WatchedAvatar
+                            name={p.first_name}
+                            url={p.avatar_url}
+                            size={28}
+                          />
+                          <span>{p.first_name ?? "Member"}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             </>
