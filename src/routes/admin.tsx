@@ -586,6 +586,7 @@ function AddMovieDialog({
         title: details.title ?? r.title,
         year,
         poster_url: posterUrl,
+        overview: details.overview ?? null,
         runtime: details.runtime,
         genres: details.genres?.map((g) => g.name) ?? [],
         imdb_rating: imdbRating,
