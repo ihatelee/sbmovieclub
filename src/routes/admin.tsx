@@ -336,7 +336,9 @@ function ScreeningsTable({
                 </td>
               </tr>
             ) : (
-              movies.map((m) => (
+              movies.map((m) => {
+                const r = ratingsByMovie[m.id];
+                return (
                 <tr
                   key={m.id}
                   className="border-b border-border last:border-0 transition-colors hover:bg-secondary/60"
@@ -356,6 +358,20 @@ function ScreeningsTable({
                     </div>
                   </td>
                   <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
+                  <td className="px-6 py-3">
+                    {r ? (
+                      <span className="text-sm font-bold">
+                        🍿 {r.avg.toFixed(1)}/5
+                        <span className="ml-1 text-xs font-medium text-muted-foreground">
+                          ({r.count})
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium text-muted-foreground">
+                        No ratings yet
+                      </span>
+                    )}
+                  </td>
                   <td className="px-6 py-3">
                     {m.is_current ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-primary">
