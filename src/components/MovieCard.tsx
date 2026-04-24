@@ -24,15 +24,21 @@ export function MovieCard({
   userRating,
   picker,
   pickerUserId,
+  avgRating,
+  ratingCount,
 }: {
   movie: Movie;
   userRating?: number;
   picker?: Picker | null;
   pickerUserId?: string | null;
+  avgRating?: number | null;
+  ratingCount?: number;
 }) {
   const [a, b] = gradientFor(movie.id);
   const showRating =
     typeof userRating === "number" && userRating > 0;
+  const showAvg =
+    typeof avgRating === "number" && avgRating > 0 && (ratingCount ?? 0) > 0;
   const hasPoster = !!movie.posterUrl;
 
   return (
@@ -65,6 +71,13 @@ export function MovieCard({
           </div>
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+
+        {showAvg && (
+          <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-background/85 px-2.5 py-1 text-xs font-bold backdrop-blur">
+            <span>{avgRating!.toFixed(1)}</span>
+            <span aria-hidden>🍿</span>
+          </div>
+        )}
 
         {showRating && (
           <div className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-background/85 px-2.5 py-1 text-xs font-bold backdrop-blur">
