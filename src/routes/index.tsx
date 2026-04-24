@@ -405,11 +405,16 @@ function HomePage() {
                   runtime: m.runtime ?? 0,
                   watchedAt: m.added_at,
                 }}
-                picker={
-                  m.picked_by_user_id
-                    ? profileById.get(m.picked_by_user_id) ?? null
-                    : null
-                }
+                picker={(() => {
+                  const pid = m.picked_by_id ?? m.picked_by_user_id;
+                  const p = pid ? profileById.get(pid) ?? null : null;
+                  if (p) return p;
+                  if (m.picked_by) {
+                    return { first_name: m.picked_by, avatar_url: null };
+                  }
+                  return null;
+                })()}
+                pickerUserId={m.picked_by_id ?? null}
               />
             ))}
           </div>
