@@ -391,18 +391,13 @@ function ScreeningsTable({
                     </td>
                     <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
                     <td className="px-6 py-3">
-                      {(() => {
-                        const picker = m.picked_by_user_id
-                          ? profileById.get(m.picked_by_user_id)
-                          : null;
-                        return picker ? (
-                          <PickedBy picker={picker} size="sm" bare />
-                        ) : (
-                          <span className="text-xs font-medium text-muted-foreground">
-                            —
-                          </span>
-                        );
-                      })()}
+                      <PickerSelect
+                        profiles={pickerProfiles}
+                        value={m.picked_by_user_id}
+                        onChange={(id) => onSetPicker(m.id, id)}
+                        size="sm"
+                        placeholder="—"
+                      />
                     </td>
                     <td className="px-6 py-3">
                       {m.is_current ? (
