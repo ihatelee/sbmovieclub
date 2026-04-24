@@ -553,17 +553,28 @@ function AddMovieDialog({
   open,
   onOpenChange,
   existingTmdbIds,
+  profiles,
   onAdded,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   existingTmdbIds: Set<number>;
+  profiles: ProfileRow[];
   onAdded: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<TmdbSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [savingId, setSavingId] = useState<number | null>(null);
+  const [pickerId, setPickerId] = useState<string | null>(null);
+
+  const pickerProfiles = useMemo(
+    () =>
+      profiles
+        .filter((p) => p.is_approved)
+        .map((p) => ({ id: p.id, first_name: p.first_name, avatar_url: p.avatar_url })),
+    [profiles]
+  );
 
   // Debounced search
   useEffect(() => {
