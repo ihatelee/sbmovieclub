@@ -1,34 +1,25 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { RatingBar } from "@/components/RatingBar";
-import { getMovieById } from "@/lib/mock-movies";
+import { supabase } from "@/lib/supabase";
+
+type MovieRow = {
+  id: string;
+  title: string;
+  year: number | null;
+  poster_url: string | null;
+  overview: string | null;
+  runtime: number | null;
+  genres: string[] | null;
+  imdb_rating: number | null;
+  rt_score: number | null;
+  tmdb_rating: number | null;
+  is_current: boolean;
+  added_at: string;
+};
 
 export const Route = createFileRoute("/movies/$movieId")({
-  loader: ({ params }) => {
-    const movie = getMovieById(params.movieId);
-    if (!movie) throw notFound();
-    return { movie };
-  },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.movie.title} — SB Movie Club` },
-          {
-            name: "description",
-            content: `${loaderData.movie.title} (${loaderData.movie.year}) — directed by ${loaderData.movie.director}.`,
-          },
-          {
-            property: "og:title",
-            content: `${loaderData.movie.title} — SB Movie Club`,
-          },
-          {
-            property: "og:image",
-            content: loaderData.movie.backdropUrl ?? loaderData.movie.posterUrl,
-          },
-        ]
-      : [],
-  }),
   component: MovieDetail,
   notFoundComponent: () => (
     <div className="flex min-h-screen items-center justify-center bg-background">
@@ -42,15 +33,66 @@ export const Route = createFileRoute("/movies/$movieId")({
   ),
 });
 
-const IS_LOGGED_IN = true;
+function Pill({ label, value, tone }: { label: string; value: string; tone: string }) {
+  return (
+    <div
+      className="flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold"
+      style={{ background: tone }}
+    >
+      <span className="opacity-80">{label}</span>
+      <span>{value}</span>
+    </div>
+  );
+}
 
 function MovieDetail() {
-  const { movie } = Route.useLoaderData();
-  const watchDate = new Date(movie.watchedAt).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const { movieId } = Route.useParams();
+  const [movie, setMovie] = useState<MovieRow | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFoundFlag, setNotFoundFlag] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("movies")
+        .select(
+          "id, title, year, poster_url, overview, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at"
+        )
+        .eq("id", movieId)
+        .maybeSingle();
+
+      if (cancelled) return;
+      if (error) {
+        console.error("[movie-detail]", error.message);
+      }
+      if (!data) setNotFoundFlag(true);
+      setMovie((data as MovieRow | null) ?? null);
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [movieId]);
+
+  if (notFoundFlag) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <div className="mx-auto max-w-3xl px-6 py-24 text-center">
+          <h1 className="text-3xl font-black">Movie not found</h1>
+          <Link
+            to="/"
+            className="mt-4 inline-block font-bold text-primary hover:underline"
+          >
+            ← Back home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,65 +107,103 @@ function MovieDetail() {
             <ArrowLeft className="h-4 w-4" /> Back
           </Link>
 
-          <div className="mt-8 grid gap-10 md:grid-cols-[280px_1fr]">
-            <div className="relative">
-              <div
-                aria-hidden
-                className="absolute -inset-5 rounded-3xl blur-3xl opacity-60"
-                style={{ background: "var(--gradient-brand)" }}
-              />
-              <div className="relative overflow-hidden rounded-2xl shadow-[var(--shadow-poster)]">
-                <img
-                  src={movie.posterUrl}
-                  alt={`${movie.title} poster`}
-                  width={600}
-                  height={900}
-                  className="aspect-[2/3] h-full w-full object-cover"
+          {loading || !movie ? (
+            <div className="mt-12 grid gap-10 md:grid-cols-[280px_1fr]">
+              <div className="aspect-[2/3] rounded-2xl bg-muted/40" />
+              <div className="space-y-4">
+                <div className="h-12 w-2/3 rounded bg-muted/40" />
+                <div className="h-4 w-1/3 rounded bg-muted/40" />
+                <div className="h-24 w-full rounded bg-muted/40" />
+              </div>
+            </div>
+          ) : (
+            <div className="mt-8 grid gap-10 md:grid-cols-[280px_1fr]">
+              <div className="relative">
+                <div
+                  aria-hidden
+                  className="absolute -inset-5 rounded-3xl blur-3xl opacity-60"
+                  style={{ background: "var(--gradient-brand)" }}
                 />
-              </div>
-            </div>
-
-            <div>
-              <h1 className="text-5xl font-black leading-[0.95] tracking-tight md:text-6xl">
-                {movie.title}
-              </h1>
-              <p className="mt-3 text-base font-semibold text-muted-foreground">
-                {movie.director} · {movie.year} · {movie.runtime} min
-              </p>
-
-              <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold">
-                <span className="rounded-full bg-secondary px-3 py-1.5">
-                  📅 {watchDate}
-                </span>
-                {movie.pickedBy && (
-                  <span className="rounded-full bg-secondary px-3 py-1.5">
-                    🎟 Picked by {movie.pickedBy}
-                  </span>
-                )}
-                {movie.rating !== undefined && (
-                  <span
-                    className="rounded-full px-3 py-1.5 text-primary-foreground"
-                    style={{ background: "var(--gradient-brand)" }}
-                  >
-                    Club avg {movie.rating.toFixed(1)}/10
-                  </span>
-                )}
+                <div
+                  className="relative aspect-[2/3] overflow-hidden rounded-2xl shadow-[var(--shadow-poster)]"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #1a1a2e 0%, #16162a 100%)",
+                  }}
+                >
+                  {movie.poster_url && !imgFailed ? (
+                    <img
+                      src={movie.poster_url}
+                      alt={`${movie.title} poster`}
+                      width={600}
+                      height={900}
+                      className="h-full w-full object-cover"
+                      onError={() => setImgFailed(true)}
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center p-6 text-center">
+                      <span className="text-2xl font-black leading-tight tracking-tight text-white drop-shadow-lg">
+                        {movie.title}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <p className="mt-7 text-base leading-relaxed text-foreground/90">
-                {movie.synopsis}
-              </p>
-
-              {IS_LOGGED_IN && <RatingBar />}
-
-              <div className="mt-10 rounded-2xl border border-border bg-card p-6">
-                <h2 className="text-xl font-black tracking-tight">Club discussion</h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Member ratings and notes will appear here once Lovable Cloud is connected.
+              <div>
+                <h1 className="text-5xl font-black leading-[0.95] tracking-tight md:text-6xl">
+                  {movie.title}
+                </h1>
+                <p className="mt-3 text-base font-semibold text-muted-foreground">
+                  {[
+                    movie.year,
+                    movie.runtime ? `${movie.runtime} min` : null,
+                    movie.genres?.length ? movie.genres.slice(0, 3).join(" · ") : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </p>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {movie.is_current && (
+                    <span
+                      className="rounded-full px-3 py-1.5 text-xs font-bold text-primary-foreground"
+                      style={{ background: "var(--gradient-brand)" }}
+                    >
+                      🎬 Currently watching
+                    </span>
+                  )}
+                  {movie.imdb_rating != null && (
+                    <Pill
+                      label="IMDb"
+                      value={movie.imdb_rating.toFixed(1)}
+                      tone="rgba(245,197,24,0.18)"
+                    />
+                  )}
+                  {movie.rt_score != null && (
+                    <Pill
+                      label="RT"
+                      value={`${Math.round(movie.rt_score)}%`}
+                      tone="rgba(250,50,10,0.18)"
+                    />
+                  )}
+                  {movie.tmdb_rating != null && (
+                    <Pill
+                      label="TMDB"
+                      value={`${Math.round(movie.tmdb_rating * 10)}%`}
+                      tone="rgba(1,210,119,0.18)"
+                    />
+                  )}
+                </div>
+
+                {movie.overview && (
+                  <p className="mt-7 text-base leading-relaxed text-foreground/90">
+                    {movie.overview}
+                  </p>
+                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
