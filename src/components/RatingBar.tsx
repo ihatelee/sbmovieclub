@@ -1,15 +1,18 @@
 import { useState } from "react";
 
 export function RatingBar({
-  initial = 0,
-  onRate,
+  rating,
+  onChange,
   onMarkWatched,
+  watched = false,
+  saving = false,
 }: {
-  initial?: number;
-  onRate?: (n: number) => void;
-  onMarkWatched?: () => void;
+  rating: number;
+  onChange: (n: number) => void;
+  onMarkWatched: () => void;
+  watched?: boolean;
+  saving?: boolean;
 }) {
-  const [rating, setRating] = useState(initial);
   const [hover, setHover] = useState(0);
 
   return (
@@ -41,14 +44,12 @@ export function RatingBar({
                 type="button"
                 aria-label={`Rate ${n}`}
                 onMouseEnter={() => setHover(n)}
-                onClick={() => {
-                  setRating(n);
-                  onRate?.(n);
-                }}
+                onClick={() => onChange(n)}
                 className="leading-none transition-transform hover:scale-125"
                 style={{
                   fontSize: "28px",
-                  opacity: active ? 1 : 0.4,
+                  opacity: active ? 1 : 0.35,
+                  filter: active ? "none" : "grayscale(0.6)",
                 }}
               >
                 🍿
@@ -61,9 +62,10 @@ export function RatingBar({
       <button
         type="button"
         onClick={onMarkWatched}
-        className="rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground transition-all hover:shadow-[var(--shadow-glow-orange)]"
+        disabled={saving}
+        className="rounded-full bg-primary px-5 py-2.5 text-sm font-black text-primary-foreground transition-all hover:shadow-[var(--shadow-glow-orange)] disabled:opacity-60"
       >
-        Mark watched
+        {saving ? "Saving..." : watched ? "Watched ✓" : "Mark watched"}
       </button>
     </div>
   );
