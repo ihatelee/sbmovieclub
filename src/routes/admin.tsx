@@ -400,8 +400,9 @@ function ScreeningsTable({
                       </Button>
                     </div>
                   </td>
-                </tr>
-              ))
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
