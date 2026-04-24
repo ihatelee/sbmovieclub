@@ -88,7 +88,7 @@ function HomePage() {
           .select(MOVIE_COLUMNS)
           .eq("is_current", false)
           .order("order_index", { ascending: false })
-          .limit(9),
+          .limit(15),
       ]);
 
       if (cancelled) return;
