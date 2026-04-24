@@ -131,17 +131,14 @@ function HomePage() {
       setRecent((recentRes.data as MovieRow[] | null) ?? []);
       setProfiles((profilesRes.data as ProfileLite[] | null) ?? []);
 
-      if (currentMovie) {
-        const watchesRes = await supabase
-          .from("watches")
-          .select("user_id, rating")
-          .eq("movie_id", currentMovie.id);
-        if (!cancelled) {
-          if (watchesRes.error) {
-            console.error("[home] watches:", watchesRes.error.message);
-          }
-          setWatches((watchesRes.data as WatchRow[] | null) ?? []);
+      const watchesRes = await supabase
+        .from("watches")
+        .select("user_id, movie_id, rating");
+      if (!cancelled) {
+        if (watchesRes.error) {
+          console.error("[home] watches:", watchesRes.error.message);
         }
+        setWatches((watchesRes.data as WatchRow[] | null) ?? []);
       }
 
       setLoading(false);
