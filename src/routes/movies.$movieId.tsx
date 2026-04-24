@@ -20,6 +20,7 @@ type MovieRow = {
   is_current: boolean;
   added_at: string;
   picked_by_user_id: string | null;
+  picked_by: string | null;
 };
 
 type WatcherRow = {
@@ -73,7 +74,7 @@ function MovieDetail() {
         supabase
           .from("movies")
           .select(
-            "id, title, year, poster_url, overview, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id"
+            "id, title, year, poster_url, overview, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id, picked_by"
           )
           .eq("id", movieId)
           .maybeSingle(),

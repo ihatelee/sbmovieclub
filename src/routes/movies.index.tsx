@@ -52,7 +52,7 @@ function AllMoviesPage() {
     const [mRes, wRes, pRes] = await Promise.all([
       supabase
         .from("movies")
-        .select("id, title, year, poster_url, imdb_rating, rt_score, is_current")
+        .select("id, title, year, poster_url, imdb_rating, rt_score, is_current, picked_by")
         .order("order_index", { ascending: false }),
       supabase.from("watches").select("user_id, movie_id, rating"),
       supabase
