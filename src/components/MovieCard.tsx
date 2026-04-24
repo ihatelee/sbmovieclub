@@ -1,5 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import type { Movie } from "@/lib/mock-movies";
+import { PickedBy } from "@/components/PickedBy";
+
+type Picker = { first_name: string | null; avatar_url: string | null };
 
 // Deterministic gradient pair based on movie id
 const gradients = [
