@@ -166,6 +166,14 @@ function HomePage() {
     ? profileById.get(current.picked_by_user_id) ?? null
     : null;
 
+  const currentWatchers = useMemo(
+    () =>
+      currentWatcherIds
+        .map((id) => profileById.get(id))
+        .filter((p): p is ProfileLite => !!p),
+    [currentWatcherIds, profileById]
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
