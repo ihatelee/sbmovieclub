@@ -625,6 +625,7 @@ function AddMovieDialog({
     setQuery("");
     setResults([]);
     setSavingId(null);
+    setPickerId(null);
   };
 
   const handlePick = async (r: TmdbSearchResult) => {
