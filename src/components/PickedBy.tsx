@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { UserAvatar } from "@/components/UserAvatar";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +9,10 @@ type Picker = {
 
 type Props = {
   picker?: Picker | null;
+  /** Plain text fallback when no linked picker profile exists. */
+  fallbackName?: string | null;
+  /** When provided, the pill becomes a link to /profile/$userId. */
+  linkUserId?: string | null;
   size?: "sm" | "md" | "lg";
   className?: string;
   /**
@@ -26,27 +31,50 @@ const TEXT_CLASS = {
 
 /**
  * Compact "Picked by <Avatar> <Name>" pill.
- * Renders nothing when the picker is unknown.
+ * Falls back to a plain-text picker name when no linked profile exists.
+ * Renders nothing when neither a picker profile nor a fallback name is given.
  */
-export function PickedBy({ picker, size = "md", className, bare = false }: Props) {
-  if (!picker || !picker.first_name) return null;
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-2 rounded-full bg-secondary/80 py-1 pl-1 pr-3 font-bold",
-        TEXT_CLASS[size],
-        className
-      )}
-    >
+export function PickedBy({
+  picker,
+  fallbackName,
+  linkUserId,
+  size = "md",
+  className,
+  bare = false,
+}: Props) {
+  const name = picker?.first_name ?? fallbackName ?? null;
+  if (!name) return null;
+
+  const pillClass = cn(
+    "inline-flex items-center gap-2 rounded-full bg-secondary/80 py-1 pl-1 pr-3 font-bold",
+    TEXT_CLASS[size],
+    linkUserId && "transition-colors hover:bg-secondary",
+    className
+  );
+
+  const inner = (
+    <>
       <UserAvatar
-        name={picker.first_name}
-        url={picker.avatar_url}
+        name={name}
+        url={picker?.avatar_url ?? null}
         size={AVATAR_SIZE[size]}
       />
-      {!bare && (
-        <span className="text-muted-foreground">Picked by</span>
-      )}
-      <span>{picker.first_name}</span>
-    </span>
+      {!bare && <span className="text-muted-foreground">Picked by</span>}
+      <span>{name}</span>
+    </>
   );
+
+  if (linkUserId) {
+    return (
+      <Link
+        to="/profile/$userId"
+        params={{ userId: linkUserId }}
+        className={pillClass}
+      >
+        {inner}
+      </Link>
+    );
+  }
+
+  return <span className={pillClass}>{inner}</span>;
 }

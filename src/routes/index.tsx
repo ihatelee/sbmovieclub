@@ -36,6 +36,7 @@ type MovieRow = {
   is_current: boolean;
   added_at: string;
   picked_by_user_id: string | null;
+  picked_by_id: string | null;
   picked_by: string | null;
 };
 
@@ -51,7 +52,7 @@ type WatchRow = {
 };
 
 const MOVIE_COLUMNS =
-  "id, tmdb_id, title, year, poster_url, overview, runtime, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id, picked_by";
+  "id, tmdb_id, title, year, poster_url, overview, runtime, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id, picked_by_id, picked_by";
 
 function RatingPill({
   label,
@@ -155,9 +156,8 @@ function HomePage() {
     return m;
   }, [profiles]);
 
-  const currentPicker = current?.picked_by_user_id
-    ? profileById.get(current.picked_by_user_id) ?? null
-    : null;
+  const currentPickerId = current?.picked_by_id ?? current?.picked_by_user_id ?? null;
+  const currentPicker = currentPickerId ? profileById.get(currentPickerId) ?? null : null;
 
   const watchedRows = useMemo(
     () =>
@@ -240,17 +240,24 @@ function HomePage() {
                       <span>{current.runtime} min</span>
                     </>
                   )}
-                  {current.picked_by && (
+                  {(currentPicker?.first_name || current.picked_by) && (
                     <>
                       <span aria-hidden>•</span>
-                      <span>Picked by {current.picked_by}</span>
+                      <span>
+                        Picked by {currentPicker?.first_name ?? current.picked_by}
+                      </span>
                     </>
                   )}
                 </div>
 
-                {currentPicker && (
+                {(currentPicker || current.picked_by) && (
                   <div className="mt-4">
-                    <PickedBy picker={currentPicker} size="md" />
+                    <PickedBy
+                      picker={currentPicker}
+                      fallbackName={current.picked_by}
+                      linkUserId={currentPicker ? currentPickerId : null}
+                      size="md"
+                    />
                   </div>
                 )}
 
@@ -398,11 +405,16 @@ function HomePage() {
                   runtime: m.runtime ?? 0,
                   watchedAt: m.added_at,
                 }}
-                picker={
-                  m.picked_by_user_id
-                    ? profileById.get(m.picked_by_user_id) ?? null
-                    : null
-                }
+                picker={(() => {
+                  const pid = m.picked_by_id ?? m.picked_by_user_id;
+                  const p = pid ? profileById.get(pid) ?? null : null;
+                  if (p) return p;
+                  if (m.picked_by) {
+                    return { first_name: m.picked_by, avatar_url: null };
+                  }
+                  return null;
+                })()}
+                pickerUserId={m.picked_by_id ?? null}
               />
             ))}
           </div>

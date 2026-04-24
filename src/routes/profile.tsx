@@ -27,6 +27,8 @@ type MovieRow = {
   rt_score: number | null;
   is_current: boolean;
   picked_by_user_id: string | null;
+  picked_by_id: string | null;
+  picked_by: string | null;
 };
 
 type WatchRow = {
@@ -58,7 +60,7 @@ function ProfilePage() {
       const [mRes, wRes, pRes] = await Promise.all([
         supabase
           .from("movies")
-          .select("id, title, year, poster_url, imdb_rating, rt_score, is_current, picked_by_user_id, picked_by")
+          .select("id, title, year, poster_url, imdb_rating, rt_score, is_current, picked_by_user_id, picked_by_id, picked_by")
           .order("order_index", { ascending: false }),
         supabase.from("watches").select("user_id, movie_id, rating"),
         supabase
@@ -333,12 +335,29 @@ function MoviesTable({
                   <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
                   <td className="px-6 py-3">
                     {(() => {
-                      const picker = m.picked_by_user_id
-                        ? profileById.get(m.picked_by_user_id)
-                        : null;
-                      return picker ? (
-                        <PickedBy picker={picker} size="sm" bare />
-                      ) : (
+                      const pid = m.picked_by_id ?? m.picked_by_user_id;
+                      const picker = pid ? profileById.get(pid) : null;
+                      if (picker) {
+                        return (
+                          <PickedBy
+                            picker={picker}
+                            linkUserId={pid}
+                            size="sm"
+                            bare
+                          />
+                        );
+                      }
+                      if (m.picked_by) {
+                        return (
+                          <PickedBy
+                            picker={null}
+                            fallbackName={m.picked_by}
+                            size="sm"
+                            bare
+                          />
+                        );
+                      }
+                      return (
                         <span className="text-xs font-medium text-muted-foreground">
                           —
                         </span>

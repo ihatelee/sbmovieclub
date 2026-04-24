@@ -23,10 +23,12 @@ export function MovieCard({
   movie,
   userRating,
   picker,
+  pickerUserId,
 }: {
   movie: Movie;
   userRating?: number;
   picker?: Picker | null;
+  pickerUserId?: string | null;
 }) {
   const [a, b] = gradientFor(movie.id);
   const showRating =
@@ -80,7 +82,7 @@ export function MovieCard({
         </p>
         {picker && (
           <div className="mt-2">
-            <PickedBy picker={picker} size="sm" />
+            <PickedBy picker={picker} size="sm" linkUserId={pickerUserId ?? null} />
           </div>
         )}
       </div>

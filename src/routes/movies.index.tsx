@@ -26,6 +26,7 @@ type MovieRow = {
   imdb_rating: number | null;
   rt_score: number | null;
   is_current: boolean;
+  picked_by_id: string | null;
   picked_by: string | null;
 };
 
@@ -54,7 +55,7 @@ function AllMoviesPage() {
     const [mRes, wRes, pRes] = await Promise.all([
       supabase
         .from("movies")
-        .select("id, title, year, poster_url, imdb_rating, rt_score, is_current, picked_by")
+        .select("id, title, year, poster_url, imdb_rating, rt_score, is_current, picked_by_id, picked_by")
         .order("order_index", { ascending: false }),
       supabase.from("watches").select("user_id, movie_id, rating"),
       supabase
@@ -230,18 +231,36 @@ function AllMoviesPage() {
                         </td>
                         <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
                         <td className="px-6 py-3">
-                          {m.picked_by ? (
-                            <PickedBy
-                              picker={{
-                                first_name: m.picked_by,
-                                avatar_url: avatarByName.get(m.picked_by.toLowerCase()) ?? null,
-                              }}
-                              size="sm"
-                              bare
-                            />
-                          ) : (
-                            <span className="text-xs font-medium text-muted-foreground">—</span>
-                          )}
+                          {(() => {
+                            const picker = m.picked_by_id
+                              ? profileById.get(m.picked_by_id) ?? null
+                              : null;
+                            if (picker) {
+                              return (
+                                <PickedBy
+                                  picker={picker}
+                                  linkUserId={m.picked_by_id}
+                                  size="sm"
+                                  bare
+                                />
+                              );
+                            }
+                            if (m.picked_by) {
+                              return (
+                                <PickedBy
+                                  picker={{
+                                    first_name: m.picked_by,
+                                    avatar_url: avatarByName.get(m.picked_by.toLowerCase()) ?? null,
+                                  }}
+                                  size="sm"
+                                  bare
+                                />
+                              );
+                            }
+                            return (
+                              <span className="text-xs font-medium text-muted-foreground">—</span>
+                            );
+                          })()}
                         </td>
                         <td className="px-6 py-3">
                           <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold">

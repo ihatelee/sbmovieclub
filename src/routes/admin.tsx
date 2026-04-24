@@ -34,6 +34,7 @@ type MovieRow = {
   is_current: boolean;
   added_at: string;
   picked_by_user_id: string | null;
+  picked_by_id: string | null;
   picked_by: string | null;
 };
 
@@ -88,7 +89,7 @@ function AdminPage() {
       supabase
         .from("movies")
         .select(
-          "id, tmdb_id, imdb_id, title, year, poster_url, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id, picked_by"
+          "id, tmdb_id, imdb_id, title, year, poster_url, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id, picked_by_id, picked_by"
         )
         .order("order_index", { ascending: false }),
       supabase.from("watches").select("movie_id, rating"),
@@ -192,13 +193,17 @@ function AdminPage() {
   };
 
   const handleSetPicker = async (movieId: string, pickerId: string | null) => {
-    // Optimistic
+    // Optimistic — update both the new FK column and the legacy one in sync.
     setMovies((prev) =>
-      prev.map((m) => (m.id === movieId ? { ...m, picked_by_user_id: pickerId } : m))
+      prev.map((m) =>
+        m.id === movieId
+          ? { ...m, picked_by_id: pickerId, picked_by_user_id: pickerId }
+          : m
+      )
     );
     const { error } = await supabase
       .from("movies")
-      .update({ picked_by_user_id: pickerId })
+      .update({ picked_by_id: pickerId, picked_by_user_id: pickerId })
       .eq("id", movieId);
     if (error) {
       toast.error("Couldn't update picker", { description: error.message });
@@ -395,12 +400,12 @@ function ScreeningsTable({
                     <td className="px-6 py-3">
                       <PickerSelect
                         profiles={pickerProfiles}
-                        value={m.picked_by_user_id}
+                        value={m.picked_by_id ?? m.picked_by_user_id}
                         onChange={(id) => onSetPicker(m.id, id)}
                         size="sm"
                         placeholder={m.picked_by ?? "—"}
                       />
-                      {m.picked_by && !m.picked_by_user_id && (
+                      {m.picked_by && !(m.picked_by_id ?? m.picked_by_user_id) && (
                         <div className="mt-1 text-[11px] font-medium text-muted-foreground">
                           {m.picked_by}
                         </div>
@@ -697,6 +702,7 @@ function AddMovieDialog({
         tmdb_rating: details.vote_average ?? null,
         is_current: false,
         picked_by_user_id: pickerId,
+        picked_by_id: pickerId,
       });
       if (error) throw error;
 
