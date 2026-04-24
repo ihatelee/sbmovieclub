@@ -289,6 +289,29 @@ function HomePage() {
                 {isLoggedIn && session?.user && (
                   <HeroRating movieId={current.id} userId={session.user.id} />
                 )}
+
+                {currentWatchers.length > 0 && (
+                  <div className="mt-7">
+                    <div className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
+                      Watched by
+                    </div>
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      {currentWatchers.map((p) => (
+                        <div
+                          key={p.id}
+                          className="flex items-center gap-2 rounded-full bg-secondary/70 py-1 pl-1 pr-3 text-sm font-bold"
+                        >
+                          <WatchedAvatar
+                            name={p.first_name}
+                            url={p.avatar_url}
+                            size={28}
+                          />
+                          <span>{p.first_name ?? "Member"}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           ) : (
