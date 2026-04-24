@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { UserAvatar } from "@/components/UserAvatar";
 import { QuickRate } from "@/components/QuickRate";
+import { SortDropdown, sortMovies, type SortKey } from "@/lib/movie-sort";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
@@ -44,6 +45,7 @@ function AllMoviesPage() {
   const [watches, setWatches] = useState<WatchRow[]>([]);
   const [profiles, setProfiles] = useState<ProfileLite[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState<SortKey>("chronology");
 
   const refresh = async () => {
     setLoading(true);
@@ -111,6 +113,11 @@ function AllMoviesPage() {
     });
   };
 
+  const sortedMovies = useMemo(
+    () => sortMovies(movies, watchersByMovie, sort),
+    [movies, watchersByMovie, sort]
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -133,17 +140,28 @@ function AllMoviesPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-6 py-12">
+        <div className="mb-6 flex items-center justify-end">
+          <SortDropdown value={sort} onChange={setSort} />
+        </div>
         <div className="overflow-hidden rounded-2xl border border-border bg-card">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full table-fixed text-sm">
+              <colgroup>
+                <col className="w-auto" />
+                <col className="w-20" />
+                <col className="w-44" />
+                <col className="w-24" />
+                <col className="w-44" />
+                <col className="w-36" />
+              </colgroup>
               <thead className="border-b border-border text-left text-xs font-black uppercase tracking-wider text-muted-foreground">
                 <tr>
                   <th className="px-6 py-3">Title</th>
                   <th className="px-6 py-3">Year</th>
                   <th className="px-6 py-3">Ratings</th>
                   <th className="px-6 py-3">Avg</th>
-                  <th className="px-6 py-3">Watched by</th>
-                  <th className="px-6 py-3 text-right">Your rating</th>
+                  <th className="px-6 py-3 whitespace-nowrap">Watched by</th>
+                  <th className="px-6 py-3 text-right whitespace-nowrap">Your rating</th>
                 </tr>
               </thead>
               <tbody>
@@ -153,14 +171,14 @@ function AllMoviesPage() {
                       Loading…
                     </td>
                   </tr>
-                ) : movies.length === 0 ? (
+                ) : sortedMovies.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
                       No movies yet.
                     </td>
                   </tr>
                 ) : (
-                  movies.map((m) => {
+                  sortedMovies.map((m) => {
                     const ws = watchersByMovie.get(m.id) ?? [];
                     const rated = ws
                       .map((w) => w.rating)
