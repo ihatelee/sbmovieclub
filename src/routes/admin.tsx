@@ -123,7 +123,7 @@ function AdminPage() {
     setProfilesError(null);
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, first_name, email, is_approved, is_admin")
+      .select("id, first_name, email, is_approved, is_admin, avatar_url")
       .order("first_name", { ascending: true });
     if (error) {
       setProfilesError(error.message);
