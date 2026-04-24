@@ -19,6 +19,14 @@ type MovieRow = {
   added_at: string;
 };
 
+type WatcherRow = {
+  id: string;
+  first_name: string | null;
+  watched: boolean;
+  rating: number | null;
+};
+
+
 export const Route = createFileRoute("/movies/$movieId")({
   component: MovieDetail,
   notFoundComponent: () => (
