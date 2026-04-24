@@ -44,6 +44,11 @@ type ProfileLite = {
   avatar_url: string | null;
 };
 
+type WatchRow = {
+  user_id: string;
+  rating: number | null;
+};
+
 const MOVIE_COLUMNS =
   "id, tmdb_id, title, year, poster_url, overview, runtime, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id";
 
