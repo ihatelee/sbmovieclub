@@ -47,6 +47,8 @@ function ProfilePage() {
   const [watches, setWatches] = useState<WatchRow[]>([]);
   const [profiles, setProfiles] = useState<ProfileLite[]>([]);
   const [loading, setLoading] = useState(true);
+  const [queueSort, setQueueSort] = useState<SortKey>("chronology");
+  const [reelSort, setReelSort] = useState<SortKey>("chronology");
 
   useEffect(() => {
     if (!user) return;
