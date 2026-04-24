@@ -24,15 +24,21 @@ export function MovieCard({
   userRating,
   picker,
   pickerUserId,
+  avgRating,
+  ratingCount,
 }: {
   movie: Movie;
   userRating?: number;
   picker?: Picker | null;
   pickerUserId?: string | null;
+  avgRating?: number | null;
+  ratingCount?: number;
 }) {
   const [a, b] = gradientFor(movie.id);
   const showRating =
     typeof userRating === "number" && userRating > 0;
+  const showAvg =
+    typeof avgRating === "number" && avgRating > 0 && (ratingCount ?? 0) > 0;
   const hasPoster = !!movie.posterUrl;
 
   return (
