@@ -89,12 +89,8 @@ function HomePage() {
               <span>{current.director}</span>
               <span aria-hidden>•</span>
               <span>{current.runtime} min</span>
-              {current.pickedBy && (
-                <>
-                  <span aria-hidden>•</span>
-                  <span>Picked by {current.pickedBy}</span>
-                </>
-              )}
+              <span aria-hidden>•</span>
+              <span className="text-primary">Round: Halloween</span>
             </div>
 
             <div className="mt-5 flex flex-wrap gap-2">
@@ -114,12 +110,6 @@ function HomePage() {
                 className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-black text-primary-foreground transition-all hover:shadow-[var(--shadow-glow-orange)]"
               >
                 ▶ View details
-              </Link>
-              <Link
-                to="/auth"
-                className="inline-flex items-center justify-center rounded-full border border-border bg-secondary px-6 py-3 text-sm font-bold text-foreground transition-colors hover:bg-card"
-              >
-                + Watchlist
               </Link>
             </div>
 
