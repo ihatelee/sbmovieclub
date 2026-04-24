@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { UserAvatar } from "@/components/UserAvatar";
-import { QuickRate } from "@/components/QuickRate";
-import { PickedBy } from "@/components/PickedBy";
 import { SortDropdown, sortMovies, type SortKey } from "@/lib/movie-sort";
-import { MobileMovieRow } from "@/components/MobileMovieRow";
+import { MoviesTable } from "@/components/MoviesTable";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
