@@ -71,6 +71,7 @@ function HomePage() {
   const [current, setCurrent] = useState<MovieRow | null>(null);
   const [recent, setRecent] = useState<MovieRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [heroImgFailed, setHeroImgFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
