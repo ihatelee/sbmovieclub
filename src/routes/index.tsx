@@ -44,6 +44,11 @@ type ProfileLite = {
   avatar_url: string | null;
 };
 
+type WatchRow = {
+  user_id: string;
+  rating: number | null;
+};
+
 const MOVIE_COLUMNS =
   "id, tmdb_id, title, year, poster_url, overview, runtime, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id";
 
@@ -81,7 +86,7 @@ function HomePage() {
   const [current, setCurrent] = useState<MovieRow | null>(null);
   const [recent, setRecent] = useState<MovieRow[]>([]);
   const [profiles, setProfiles] = useState<ProfileLite[]>([]);
-  const [currentWatcherIds, setCurrentWatcherIds] = useState<string[]>([]);
+  const [watches, setWatches] = useState<WatchRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [heroImgFailed, setHeroImgFailed] = useState(false);
 
@@ -118,43 +123,30 @@ function HomePage() {
         console.error("[home] profiles:", profilesRes.error.message);
       }
 
-      setCurrent((currentRes.data as MovieRow | null) ?? null);
+      const currentMovie = (currentRes.data as MovieRow | null) ?? null;
+      setCurrent(currentMovie);
       setRecent((recentRes.data as MovieRow[] | null) ?? []);
       setProfiles((profilesRes.data as ProfileLite[] | null) ?? []);
+
+      if (currentMovie) {
+        const watchesRes = await supabase
+          .from("watches")
+          .select("user_id, rating")
+          .eq("movie_id", currentMovie.id);
+        if (!cancelled) {
+          if (watchesRes.error) {
+            console.error("[home] watches:", watchesRes.error.message);
+          }
+          setWatches((watchesRes.data as WatchRow[] | null) ?? []);
+        }
+      }
+
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
   }, []);
-
-  // Load watcher list for the current movie (separate effect so it can
-  // re-run if the current movie changes without re-fetching everything).
-  useEffect(() => {
-    if (!current?.id) {
-      setCurrentWatcherIds([]);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      const { data, error } = await supabase
-        .from("watches")
-        .select("user_id")
-        .eq("movie_id", current.id);
-      if (cancelled) return;
-      if (error) {
-        console.error("[home] current watches:", error.message);
-        setCurrentWatcherIds([]);
-        return;
-      }
-      const ids = (data as { user_id: string }[] | null)?.map((w) => w.user_id) ?? [];
-      // De-dupe in case the table allows multiple rows per user.
-      setCurrentWatcherIds(Array.from(new Set(ids)));
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [current?.id]);
 
   const profileById = useMemo(() => {
     const m = new Map<string, ProfileLite>();
@@ -166,13 +158,22 @@ function HomePage() {
     ? profileById.get(current.picked_by_user_id) ?? null
     : null;
 
-  const currentWatchers = useMemo(
+  const watchedRows = useMemo(
     () =>
-      currentWatcherIds
-        .map((id) => profileById.get(id))
-        .filter((p): p is ProfileLite => !!p),
-    [currentWatcherIds, profileById]
+      watches
+        .map((w) => ({ ...w, profile: profileById.get(w.user_id) ?? null }))
+        .filter((w) => w.profile !== null),
+    [watches, profileById]
   );
+
+  const handleWatchChange = (next: { rating: number | null; watched: boolean }) => {
+    if (!session?.user) return;
+    const userId = session.user.id;
+    setWatches((prev) => {
+      const without = prev.filter((w) => w.user_id !== userId);
+      return next.watched ? [...without, { user_id: userId, rating: next.rating }] : without;
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -276,42 +277,64 @@ function HomePage() {
                   </p>
                 )}
 
-                <div className="mt-7 flex flex-wrap gap-3">
-                  <Link
-                    to="/movies/$movieId"
-                    params={{ movieId: current.id }}
-                    className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-black text-primary-foreground transition-all hover:shadow-[var(--shadow-glow-orange)]"
-                  >
-                    ▶ View details
-                  </Link>
-                </div>
-
-                {isLoggedIn && session?.user && (
-                  <HeroRating movieId={current.id} userId={session.user.id} />
-                )}
-
-                {currentWatchers.length > 0 && (
-                  <div className="mt-7">
-                    <div className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
-                      Watched by
-                    </div>
-                    <div className="mt-3 flex flex-wrap items-center gap-3">
-                      {currentWatchers.map((p) => (
-                        <div
-                          key={p.id}
-                          className="flex items-center gap-2 rounded-full bg-secondary/70 py-1 pl-1 pr-3 text-sm font-bold"
+                {(() => {
+                  const myWatch = session?.user
+                    ? watches.find((w) => w.user_id === session.user.id) ?? null
+                    : null;
+                  const iWatched = myWatch !== null;
+                  const myRating = myWatch?.rating ?? null;
+                  return (
+                    <>
+                      <div className="mt-7 flex flex-wrap items-center gap-3">
+                        <Link
+                          to="/movies/$movieId"
+                          params={{ movieId: current.id }}
+                          className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-black text-primary-foreground transition-all hover:shadow-[var(--shadow-glow-orange)]"
                         >
-                          <WatchedAvatar
-                            name={p.first_name}
-                            url={p.avatar_url}
-                            size={28}
-                          />
-                          <span>{p.first_name ?? "Member"}</span>
+                          ▶ View details
+                        </Link>
+                        {iWatched && (
+                          <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-5 py-3 text-sm font-black text-primary">
+                            <span aria-hidden>✓</span>
+                            Watched
+                            {myRating != null && (
+                              <span className="ml-1 text-foreground/80">
+                                · {"🍿".repeat(myRating)}
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </div>
+
+                      {isLoggedIn && session?.user && !iWatched && (
+                        <HeroRating
+                          movieId={current.id}
+                          userId={session.user.id}
+                          onChange={handleWatchChange}
+                        />
+                      )}
+
+                      {watchedRows.length > 0 && (
+                        <div className="mt-6">
+                          <div className="text-[11px] font-black uppercase tracking-[0.18em] text-muted-foreground">
+                            Watched by
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                            {watchedRows.map((w) => (
+                              <WatchedAvatar
+                                key={w.user_id}
+                                name={w.profile?.first_name ?? null}
+                                url={w.profile?.avatar_url ?? null}
+                                rating={w.rating}
+                                size={36}
+                              />
+                            ))}
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </>
           ) : (
@@ -390,60 +413,26 @@ function HomePage() {
   );
 }
 
-function HeroRating({ movieId, userId }: { movieId: string; userId: string }) {
+function HeroRating({
+  movieId,
+  userId,
+  onChange,
+}: {
+  movieId: string;
+  userId: string;
+  onChange?: (next: { rating: number | null; watched: boolean }) => void;
+}) {
   const [rating, setRating] = useState(0);
-  const [watched, setWatched] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("watches")
-        .select("rating")
-        .eq("user_id", userId)
-        .eq("movie_id", movieId)
-        .maybeSingle();
-      if (cancelled) return;
-      if (error) {
-        console.error("[hero-rating] fetch:", error.message);
-      } else if (data) {
-        setWatched(true);
-        setRating(typeof data.rating === "number" ? data.rating : 0);
-      }
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [movieId, userId]);
-
-  const handleChange = async (n: number) => {
-    setRating(n);
-    // If already watched, persist the rating change immediately.
-    if (watched) {
-      const { error } = await supabase
-        .from("watches")
-        .upsert(
-          { user_id: userId, movie_id: movieId, rating: n },
-          { onConflict: "user_id,movie_id" }
-        );
-      if (error) {
-        console.error("[hero-rating] update:", error.message);
-        toast.error("Couldn't save rating", { description: error.message });
-      }
-    }
-  };
 
   const handleMarkWatched = async () => {
     setSaving(true);
+    const finalRating = rating > 0 ? rating : null;
     const { error } = await supabase.from("watches").upsert(
       {
         user_id: userId,
         movie_id: movieId,
-        rating: rating > 0 ? rating : null,
+        rating: finalRating,
       },
       { onConflict: "user_id,movie_id" }
     );
@@ -453,18 +442,16 @@ function HeroRating({ movieId, userId }: { movieId: string; userId: string }) {
       toast.error("Couldn't mark as watched", { description: error.message });
       return;
     }
-    setWatched(true);
+    onChange?.({ rating: finalRating, watched: true });
     toast.success("Marked as watched");
   };
-
-  if (loading) return null;
 
   return (
     <RatingBar
       rating={rating}
-      onChange={handleChange}
+      onChange={setRating}
       onMarkWatched={handleMarkWatched}
-      watched={watched}
+      watched={false}
       saving={saving}
     />
   );

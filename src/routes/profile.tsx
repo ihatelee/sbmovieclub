@@ -4,7 +4,6 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { UserAvatar } from "@/components/UserAvatar";
 import { QuickRate } from "@/components/QuickRate";
 import { PickedBy } from "@/components/PickedBy";
-import { SortDropdown, sortMovies, type SortKey } from "@/lib/movie-sort";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
@@ -257,33 +256,23 @@ function MoviesTable({
     next: { rating: number | null; watched: boolean }
   ) => void;
 }) {
-  const [sort, setSort] = useState<SortKey>("chronology");
-  const sorted = useMemo(
-    () => sortMovies(movies, watchersByMovie, sort),
-    [movies, watchersByMovie, sort]
-  );
-
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-end">
-        <SortDropdown value={sort} onChange={setSort} />
-      </div>
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-border text-left text-xs font-black uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-6 py-3">Title</th>
-                <th className="px-6 py-3">Year</th>
-                <th className="px-6 py-3">Picked by</th>
-                <th className="px-6 py-3">Ratings</th>
-                <th className="px-6 py-3">Avg</th>
-                <th className="px-6 py-3">Watched by</th>
-                <th className="px-6 py-3 text-right">Your rating</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.map((m) => {
+    <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="border-b border-border text-left text-xs font-black uppercase tracking-wider text-muted-foreground">
+            <tr>
+              <th className="px-6 py-3">Title</th>
+              <th className="px-6 py-3">Year</th>
+              <th className="px-6 py-3">Picked by</th>
+              <th className="px-6 py-3">Ratings</th>
+              <th className="px-6 py-3">Avg</th>
+              <th className="px-6 py-3">Watched by</th>
+              <th className="px-6 py-3 text-right">Your rating</th>
+            </tr>
+          </thead>
+          <tbody>
+            {movies.map((m) => {
               const ws = watchersByMovie.get(m.id) ?? [];
               const rated = ws
                 .map((w) => w.rating)
@@ -419,9 +408,8 @@ function MoviesTable({
                 </tr>
               );
             })}
-            </tbody>
-          </table>
-        </div>
+          </tbody>
+        </table>
       </div>
     </div>
   );
