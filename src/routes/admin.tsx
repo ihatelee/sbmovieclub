@@ -190,7 +190,22 @@ function AdminPage() {
     );
   };
 
-  // -------- Render --------
+  const handleSetPicker = async (movieId: string, pickerId: string | null) => {
+    // Optimistic
+    setMovies((prev) =>
+      prev.map((m) => (m.id === movieId ? { ...m, picked_by_user_id: pickerId } : m))
+    );
+    const { error } = await supabase
+      .from("movies")
+      .update({ picked_by_user_id: pickerId })
+      .eq("id", movieId);
+    if (error) {
+      toast.error("Couldn't update picker", { description: error.message });
+      void refreshMovies();
+      return;
+    }
+    toast.success(pickerId ? "Picker updated" : "Picker cleared");
+  };
 
   return (
     <div className="min-h-screen bg-background">
