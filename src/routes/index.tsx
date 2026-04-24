@@ -160,17 +160,37 @@ function HomePage() {
   const watchedRows = useMemo(
     () =>
       watches
+        .filter((w) => current && w.movie_id === current.id)
         .map((w) => ({ ...w, profile: profileById.get(w.user_id) ?? null }))
         .filter((w) => w.profile !== null),
-    [watches, profileById]
+    [watches, profileById, current]
   );
 
+  const avgByMovie = useMemo(() => {
+    const m = new Map<string, { avg: number; count: number }>();
+    const groups = new Map<string, number[]>();
+    for (const w of watches) {
+      if (typeof w.rating === "number" && w.rating > 0) {
+        const arr = groups.get(w.movie_id) ?? [];
+        arr.push(w.rating);
+        groups.set(w.movie_id, arr);
+      }
+    }
+    for (const [id, rs] of groups) {
+      m.set(id, { avg: rs.reduce((a, b) => a + b, 0) / rs.length, count: rs.length });
+    }
+    return m;
+  }, [watches]);
+
   const handleWatchChange = (next: { rating: number | null; watched: boolean }) => {
-    if (!session?.user) return;
+    if (!session?.user || !current) return;
     const userId = session.user.id;
+    const movieId = current.id;
     setWatches((prev) => {
-      const without = prev.filter((w) => w.user_id !== userId);
-      return next.watched ? [...without, { user_id: userId, rating: next.rating }] : without;
+      const without = prev.filter((w) => !(w.user_id === userId && w.movie_id === movieId));
+      return next.watched
+        ? [...without, { user_id: userId, movie_id: movieId, rating: next.rating }]
+        : without;
     });
   };
 
