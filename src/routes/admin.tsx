@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Check, Film, Loader2, Plus, Search, Star, Trash2, Users, X } from "lucide-react";
 
 import { SiteHeader } from "@/components/SiteHeader";
-import { PickedBy } from "@/components/PickedBy";
+import { PickerSelect } from "@/components/PickerSelect";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -190,7 +190,22 @@ function AdminPage() {
     );
   };
 
-  // -------- Render --------
+  const handleSetPicker = async (movieId: string, pickerId: string | null) => {
+    // Optimistic
+    setMovies((prev) =>
+      prev.map((m) => (m.id === movieId ? { ...m, picked_by_user_id: pickerId } : m))
+    );
+    const { error } = await supabase
+      .from("movies")
+      .update({ picked_by_user_id: pickerId })
+      .eq("id", movieId);
+    if (error) {
+      toast.error("Couldn't update picker", { description: error.message });
+      void refreshMovies();
+      return;
+    }
+    toast.success(pickerId ? "Picker updated" : "Picker cleared");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -241,6 +256,7 @@ function AdminPage() {
               loading={loadingMovies}
               onSetCurrent={handleSetCurrent}
               onDelete={handleDelete}
+              onSetPicker={handleSetPicker}
             />
           </TabsContent>
 
@@ -259,6 +275,7 @@ function AdminPage() {
         open={searchOpen}
         onOpenChange={setSearchOpen}
         existingTmdbIds={new Set(movies.map((m) => m.tmdb_id).filter(Boolean) as number[])}
+        profiles={profiles}
         onAdded={() => {
           void refreshMovies();
         }}
@@ -300,6 +317,7 @@ function ScreeningsTable({
   loading,
   onSetCurrent,
   onDelete,
+  onSetPicker,
 }: {
   movies: MovieRow[];
   ratingsByMovie: Record<string, { avg: number; count: number }>;
@@ -307,12 +325,15 @@ function ScreeningsTable({
   loading: boolean;
   onSetCurrent: (id: string) => void;
   onDelete: (id: string, title: string) => void;
+  onSetPicker: (movieId: string, pickerId: string | null) => void;
 }) {
-  const profileById = useMemo(() => {
-    const m = new Map<string, ProfileRow>();
-    for (const p of profiles) m.set(p.id, p);
-    return m;
-  }, [profiles]);
+  const pickerProfiles = useMemo(
+    () =>
+      profiles
+        .filter((p) => p.is_approved)
+        .map((p) => ({ id: p.id, first_name: p.first_name, avatar_url: p.avatar_url })),
+    [profiles]
+  );
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card">
       <div className="flex items-center justify-between border-b border-border px-6 py-4">
@@ -371,18 +392,13 @@ function ScreeningsTable({
                     </td>
                     <td className="px-6 py-3 text-muted-foreground">{m.year ?? "—"}</td>
                     <td className="px-6 py-3">
-                      {(() => {
-                        const picker = m.picked_by_user_id
-                          ? profileById.get(m.picked_by_user_id)
-                          : null;
-                        return picker ? (
-                          <PickedBy picker={picker} size="sm" bare />
-                        ) : (
-                          <span className="text-xs font-medium text-muted-foreground">
-                            —
-                          </span>
-                        );
-                      })()}
+                      <PickerSelect
+                        profiles={pickerProfiles}
+                        value={m.picked_by_user_id}
+                        onChange={(id) => onSetPicker(m.id, id)}
+                        size="sm"
+                        placeholder="—"
+                      />
                     </td>
                     <td className="px-6 py-3">
                       {m.is_current ? (
@@ -537,17 +553,28 @@ function AddMovieDialog({
   open,
   onOpenChange,
   existingTmdbIds,
+  profiles,
   onAdded,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   existingTmdbIds: Set<number>;
+  profiles: ProfileRow[];
   onAdded: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<TmdbSearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [savingId, setSavingId] = useState<number | null>(null);
+  const [pickerId, setPickerId] = useState<string | null>(null);
+
+  const pickerProfiles = useMemo(
+    () =>
+      profiles
+        .filter((p) => p.is_approved)
+        .map((p) => ({ id: p.id, first_name: p.first_name, avatar_url: p.avatar_url })),
+    [profiles]
+  );
 
   // Debounced search
   useEffect(() => {
@@ -598,6 +625,7 @@ function AddMovieDialog({
     setQuery("");
     setResults([]);
     setSavingId(null);
+    setPickerId(null);
   };
 
   const handlePick = async (r: TmdbSearchResult) => {
@@ -662,6 +690,7 @@ function AddMovieDialog({
         rt_score: rtScore,
         tmdb_rating: details.vote_average ?? null,
         is_current: false,
+        picked_by_user_id: pickerId,
       });
       if (error) throw error;
 
@@ -692,6 +721,19 @@ function AddMovieDialog({
           <DialogTitle>Add a movie</DialogTitle>
           <DialogDescription>Search TMDB and pick a result.</DialogDescription>
         </DialogHeader>
+
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-secondary/40 p-3">
+          <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+            Picked by
+          </span>
+          <PickerSelect
+            profiles={pickerProfiles}
+            value={pickerId}
+            onChange={setPickerId}
+            size="sm"
+            placeholder="Choose member"
+          />
+        </div>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
