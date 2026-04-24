@@ -325,7 +325,7 @@ function ScreeningsTable({
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-6 py-10 text-center text-muted-foreground">
+                <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">
                   <Loader2 className="mx-auto h-5 w-5 animate-spin" />
                 </td>
               </tr>
