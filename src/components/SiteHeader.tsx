@@ -2,15 +2,12 @@ import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { UserAvatar } from "@/components/UserAvatar";
 
 export function SiteHeader() {
   const { session, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const isLoggedIn = !!session;
   const isAdmin = !!profile?.is_admin;
-  const firstName = profile?.first_name;
-  const avatarUrl = profile?.avatar_url ?? null;
   const [open, setOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -47,6 +44,13 @@ export function SiteHeader() {
             Home
           </Link>
 
+          <Link
+            to="/movies"
+            className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground"
+          >
+            All movies
+          </Link>
+
           {isLoggedIn && isAdmin && (
             <Link
               to="/admin"
@@ -58,15 +62,12 @@ export function SiteHeader() {
 
           {isLoggedIn ? (
             <div className="ml-2 flex items-center gap-3">
-              {firstName && (
-                <Link
-                  to="/profile"
-                  className="inline-flex items-center gap-2 rounded-full bg-secondary py-1 pl-1 pr-3 text-sm font-bold text-foreground transition-colors hover:bg-secondary/80"
-                >
-                  <UserAvatar name={firstName} url={avatarUrl} size={28} />
-                  <span>{firstName}</span>
-                </Link>
-              )}
+              <Link
+                to="/profile"
+                className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground"
+              >
+                My Ratings
+              </Link>
               <button
                 onClick={handleSignOut}
                 className="rounded-full bg-secondary px-4 py-2 font-bold text-foreground transition-colors hover:bg-secondary/80"
@@ -119,10 +120,9 @@ export function SiteHeader() {
               <Link
                 to="/profile"
                 onClick={closeMenu}
-                className="flex items-center gap-2 rounded-xl px-4 py-3 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground"
+                className="rounded-xl px-4 py-3 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground"
               >
-                {firstName && <UserAvatar name={firstName} url={avatarUrl} size={24} />}
-                <span>Profile</span>
+                My Ratings
               </Link>
             )}
             {isLoggedIn && isAdmin && (
