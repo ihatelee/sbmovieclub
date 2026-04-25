@@ -163,11 +163,17 @@ function HomePage() {
   }, [profiles]);
 
   const currentPickerId = current?.picked_by_id ?? current?.picked_by_user_id ?? null;
-  const currentPicker =
-    (currentPickerId ? profileById.get(currentPickerId) ?? null : null) ??
-    (current?.picked_by
-      ? profileByName.get(current.picked_by.trim().toLowerCase()) ?? null
-      : null);
+  const currentPicker = ((): ProfileLite | null => {
+    if (currentPickerId) {
+      const byId = profileById.get(currentPickerId);
+      if (byId) return byId;
+    }
+    if (current?.picked_by) {
+      const byName = profileByName.get(current.picked_by.trim().toLowerCase());
+      if (byName) return byName;
+    }
+    return null;
+  })();
   const currentPickerLinkId = currentPicker?.id ?? null;
 
   const watchedRows = useMemo(
