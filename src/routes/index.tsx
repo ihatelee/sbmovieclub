@@ -442,16 +442,26 @@ function HomePage() {
                   runtime: m.runtime ?? 0,
                   watchedAt: m.added_at,
                 }}
-                picker={(() => {
+                {...(() => {
                   const pid = m.picked_by_id ?? m.picked_by_user_id;
-                  const p = pid ? profileById.get(pid) ?? null : null;
-                  if (p) return p;
-                  if (m.picked_by) {
-                    return { first_name: m.picked_by, avatar_url: null };
+                  let p: ProfileLite | null = pid ? profileById.get(pid) ?? null : null;
+                  if (!p && m.picked_by) {
+                    p = profileByName.get(m.picked_by.trim().toLowerCase()) ?? null;
                   }
-                  return null;
+                  if (p) {
+                    return {
+                      picker: { first_name: p.first_name, avatar_url: p.avatar_url },
+                      pickerUserId: p.id,
+                    };
+                  }
+                  if (m.picked_by) {
+                    return {
+                      picker: { first_name: m.picked_by, avatar_url: null },
+                      pickerUserId: null,
+                    };
+                  }
+                  return { picker: null, pickerUserId: null };
                 })()}
-                pickerUserId={m.picked_by_id ?? m.picked_by_user_id ?? null}
                 avgRating={avgByMovie.get(m.id)?.avg ?? null}
                 ratingCount={avgByMovie.get(m.id)?.count ?? 0}
               />
