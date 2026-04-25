@@ -120,10 +120,9 @@ export function SiteHeader() {
               <Link
                 to="/profile"
                 onClick={closeMenu}
-                className="flex items-center gap-2 rounded-xl px-4 py-3 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground"
+                className="rounded-xl px-4 py-3 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground"
               >
-                {firstName && <UserAvatar name={firstName} url={avatarUrl} size={24} />}
-                <span>Profile</span>
+                My Ratings
               </Link>
             )}
             {isLoggedIn && isAdmin && (
