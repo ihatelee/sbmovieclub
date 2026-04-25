@@ -44,6 +44,13 @@ export function SiteHeader() {
             Home
           </Link>
 
+          <Link
+            to="/movies"
+            className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground"
+          >
+            All movies
+          </Link>
+
           {isLoggedIn && isAdmin && (
             <Link
               to="/admin"
@@ -55,15 +62,12 @@ export function SiteHeader() {
 
           {isLoggedIn ? (
             <div className="ml-2 flex items-center gap-3">
-              {firstName && (
-                <Link
-                  to="/profile"
-                  className="inline-flex items-center gap-2 rounded-full bg-secondary py-1 pl-1 pr-3 text-sm font-bold text-foreground transition-colors hover:bg-secondary/80"
-                >
-                  <UserAvatar name={firstName} url={avatarUrl} size={28} />
-                  <span>{firstName}</span>
-                </Link>
-              )}
+              <Link
+                to="/profile"
+                className="rounded-full px-4 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:text-foreground"
+              >
+                My Ratings
+              </Link>
               <button
                 onClick={handleSignOut}
                 className="rounded-full bg-secondary px-4 py-2 font-bold text-foreground transition-colors hover:bg-secondary/80"
