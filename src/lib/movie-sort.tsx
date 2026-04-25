@@ -8,6 +8,7 @@ import {
 export type SortKey =
   | "chronology"
   | "rating"
+  | "lowest_rated"
   | "most_watched"
   | "least_watched"
   | "controversial";
@@ -15,6 +16,7 @@ export type SortKey =
 export const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "chronology", label: "Most recent" },
   { key: "rating", label: "Highest rated" },
+  { key: "lowest_rated", label: "Lowest rated" },
   { key: "most_watched", label: "Most watched" },
   { key: "least_watched", label: "Least watched" },
   { key: "controversial", label: "Most controversial" },
