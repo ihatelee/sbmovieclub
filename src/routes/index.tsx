@@ -154,8 +154,27 @@ function HomePage() {
     return m;
   }, [profiles]);
 
+  const profileByName = useMemo(() => {
+    const m = new Map<string, ProfileLite>();
+    for (const p of profiles) {
+      if (p.first_name) m.set(p.first_name.trim().toLowerCase(), p);
+    }
+    return m;
+  }, [profiles]);
+
   const currentPickerId = current?.picked_by_id ?? current?.picked_by_user_id ?? null;
-  const currentPicker = currentPickerId ? profileById.get(currentPickerId) ?? null : null;
+  const currentPicker = ((): ProfileLite | null => {
+    if (currentPickerId) {
+      const byId = profileById.get(currentPickerId);
+      if (byId) return byId;
+    }
+    if (current?.picked_by) {
+      const byName = profileByName.get(current.picked_by.trim().toLowerCase());
+      if (byName) return byName;
+    }
+    return null;
+  })();
+  const currentPickerLinkId = currentPicker?.id ?? null;
 
   const watchedRows = useMemo(
     () =>
@@ -273,7 +292,7 @@ function HomePage() {
                     <PickedBy
                       picker={currentPicker}
                       fallbackName={current.picked_by}
-                      linkUserId={currentPicker ? currentPickerId : null}
+                      linkUserId={currentPickerLinkId}
                       size="md"
                     />
                   </div>
@@ -423,16 +442,26 @@ function HomePage() {
                   runtime: m.runtime ?? 0,
                   watchedAt: m.added_at,
                 }}
-                picker={(() => {
+                {...(() => {
                   const pid = m.picked_by_id ?? m.picked_by_user_id;
-                  const p = pid ? profileById.get(pid) ?? null : null;
-                  if (p) return p;
-                  if (m.picked_by) {
-                    return { first_name: m.picked_by, avatar_url: null };
+                  let p: ProfileLite | null = pid ? profileById.get(pid) ?? null : null;
+                  if (!p && m.picked_by) {
+                    p = profileByName.get(m.picked_by.trim().toLowerCase()) ?? null;
                   }
-                  return null;
+                  if (p) {
+                    return {
+                      picker: { first_name: p.first_name, avatar_url: p.avatar_url },
+                      pickerUserId: p.id,
+                    };
+                  }
+                  if (m.picked_by) {
+                    return {
+                      picker: { first_name: m.picked_by, avatar_url: null },
+                      pickerUserId: null,
+                    };
+                  }
+                  return { picker: null, pickerUserId: null };
                 })()}
-                pickerUserId={m.picked_by_id ?? null}
                 avgRating={avgByMovie.get(m.id)?.avg ?? null}
                 ratingCount={avgByMovie.get(m.id)?.count ?? 0}
               />
