@@ -250,6 +250,7 @@ function ProfilePage() {
             watchersByMovie={watchersByMovie}
             myWatchByMovie={myWatchByMovie}
             profileById={profileById}
+            avatarByName={avatarByName}
             userId={user?.id}
             onChange={handleQuickChange}
           />
