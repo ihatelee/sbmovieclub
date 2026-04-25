@@ -89,6 +89,14 @@ function ProfilePage() {
     return m;
   }, [profiles]);
 
+  const avatarByName = useMemo(() => {
+    const m = new Map<string, string | null>();
+    for (const p of profiles) {
+      if (p.first_name) m.set(p.first_name.trim().toLowerCase(), p.avatar_url);
+    }
+    return m;
+  }, [profiles]);
+
   const watchersByMovie = useMemo(() => {
     const m = new Map<string, WatchRow[]>();
     for (const w of watches) {
@@ -207,6 +215,7 @@ function ProfilePage() {
             watchersByMovie={watchersByMovie}
             myWatchByMovie={myWatchByMovie}
             profileById={profileById}
+            avatarByName={avatarByName}
             userId={user?.id}
             onChange={handleQuickChange}
           />
@@ -241,6 +250,7 @@ function ProfilePage() {
             watchersByMovie={watchersByMovie}
             myWatchByMovie={myWatchByMovie}
             profileById={profileById}
+            avatarByName={avatarByName}
             userId={user?.id}
             onChange={handleQuickChange}
           />
