@@ -432,7 +432,7 @@ function HomePage() {
                   }
                   return null;
                 })()}
-                pickerUserId={m.picked_by_id ?? null}
+                pickerUserId={m.picked_by_id ?? m.picked_by_user_id ?? null}
                 avgRating={avgByMovie.get(m.id)?.avg ?? null}
                 ratingCount={avgByMovie.get(m.id)?.count ?? 0}
               />
