@@ -64,6 +64,12 @@ export function sortMovies<T extends { id: string }>(
     const ra = wa.map((w) => w.rating).filter((r): r is number => typeof r === "number" && r > 0);
     const rb = wb.map((w) => w.rating).filter((r): r is number => typeof r === "number" && r > 0);
     if (key === "rating") return avg(rb) - avg(ra);
+    if (key === "lowest_rated") {
+      // Movies with no ratings sink to the bottom.
+      const aAvg = ra.length === 0 ? Infinity : avg(ra);
+      const bAvg = rb.length === 0 ? Infinity : avg(rb);
+      return aAvg - bAvg;
+    }
     if (key === "most_watched") return wb.length - wa.length;
     if (key === "least_watched") return wa.length - wb.length;
     if (key === "controversial") return polarization(rb) - polarization(ra);
