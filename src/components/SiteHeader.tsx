@@ -2,15 +2,12 @@ import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { UserAvatar } from "@/components/UserAvatar";
 
 export function SiteHeader() {
   const { session, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const isLoggedIn = !!session;
   const isAdmin = !!profile?.is_admin;
-  const firstName = profile?.first_name;
-  const avatarUrl = profile?.avatar_url ?? null;
   const [open, setOpen] = useState(false);
 
   const handleSignOut = async () => {
