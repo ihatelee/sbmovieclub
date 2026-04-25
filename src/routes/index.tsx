@@ -178,6 +178,21 @@ function HomePage() {
   })();
   const currentPickerLinkId = currentPicker?.id ?? null;
 
+  const nextPicker = useMemo((): ProfileLite | { first_name: string; avatar_url: null; id: null } | null => {
+    const currentName = currentPicker?.first_name ?? current?.picked_by ?? null;
+    let idx = -1;
+    if (currentName) {
+      idx = PICK_ORDER.findIndex(
+        (n) => n.toLowerCase() === currentName.trim().toLowerCase()
+      );
+    }
+    if (idx === -1) return null;
+    const nextName = PICK_ORDER[(idx + 1) % PICK_ORDER.length];
+    const profile = profileByName.get(nextName.toLowerCase());
+    if (profile) return profile;
+    return { first_name: nextName, avatar_url: null, id: null };
+  }, [currentPicker, current, profileByName]);
+
   const watchedRows = useMemo(
     () =>
       watches
