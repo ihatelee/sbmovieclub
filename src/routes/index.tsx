@@ -154,6 +154,14 @@ function HomePage() {
     return m;
   }, [profiles]);
 
+  const profileByName = useMemo(() => {
+    const m = new Map<string, ProfileLite>();
+    for (const p of profiles) {
+      if (p.first_name) m.set(p.first_name.trim().toLowerCase(), p);
+    }
+    return m;
+  }, [profiles]);
+
   const currentPickerId = current?.picked_by_id ?? current?.picked_by_user_id ?? null;
   const currentPicker = currentPickerId ? profileById.get(currentPickerId) ?? null : null;
 
