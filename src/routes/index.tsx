@@ -292,7 +292,7 @@ function HomePage() {
                     <PickedBy
                       picker={currentPicker}
                       fallbackName={current.picked_by}
-                      linkUserId={currentPicker ? currentPickerId : null}
+                      linkUserId={currentPickerLinkId}
                       size="md"
                     />
                   </div>
