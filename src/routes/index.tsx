@@ -162,6 +162,8 @@ function HomePage() {
     return m;
   }, [profiles]);
 
+  const PICK_ORDER = ["Sam", "Jessie", "Elin", "Nicole", "Lee", "Quinn"];
+
   const currentPickerId = current?.picked_by_id ?? current?.picked_by_user_id ?? null;
   const currentPicker = ((): ProfileLite | null => {
     if (currentPickerId) {
@@ -175,6 +177,21 @@ function HomePage() {
     return null;
   })();
   const currentPickerLinkId = currentPicker?.id ?? null;
+
+  const nextPicker = useMemo((): ProfileLite | { first_name: string; avatar_url: null; id: null } | null => {
+    const currentName = currentPicker?.first_name ?? current?.picked_by ?? null;
+    let idx = -1;
+    if (currentName) {
+      idx = PICK_ORDER.findIndex(
+        (n) => n.toLowerCase() === currentName.trim().toLowerCase()
+      );
+    }
+    if (idx === -1) return null;
+    const nextName = PICK_ORDER[(idx + 1) % PICK_ORDER.length];
+    const profile = profileByName.get(nextName.toLowerCase());
+    if (profile) return profile;
+    return { first_name: nextName, avatar_url: null, id: null };
+  }, [currentPicker, current, profileByName]);
 
   const watchedRows = useMemo(
     () =>
@@ -407,6 +424,26 @@ function HomePage() {
           )}
         </div>
       </section>
+
+      {/* Next pick banner */}
+      {nextPicker && (
+        <section className="border-y border-border bg-secondary/30">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-3 px-6 py-4">
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+              Next pick
+            </span>
+            <PickedBy
+              picker={{
+                first_name: nextPicker.first_name,
+                avatar_url: nextPicker.avatar_url,
+              }}
+              linkUserId={nextPicker.id ?? null}
+              size="md"
+              bare
+            />
+          </div>
+        </section>
+      )}
 
       {/* Archive */}
       <section className="mx-auto max-w-7xl px-6 py-20">
