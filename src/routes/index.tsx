@@ -162,6 +162,8 @@ function HomePage() {
     return m;
   }, [profiles]);
 
+  const PICK_ORDER = ["Sam", "Jessie", "Elin", "Nicole", "Lee", "Quinn"];
+
   const currentPickerId = current?.picked_by_id ?? current?.picked_by_user_id ?? null;
   const currentPicker = ((): ProfileLite | null => {
     if (currentPickerId) {
