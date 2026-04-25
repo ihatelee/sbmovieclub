@@ -425,6 +425,26 @@ function HomePage() {
         </div>
       </section>
 
+      {/* Next pick banner */}
+      {nextPicker && (
+        <section className="border-y border-border bg-secondary/30">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-3 px-6 py-4">
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+              Next pick
+            </span>
+            <PickedBy
+              picker={{
+                first_name: nextPicker.first_name,
+                avatar_url: nextPicker.avatar_url,
+              }}
+              linkUserId={nextPicker.id ?? null}
+              size="md"
+              bare
+            />
+          </div>
+        </section>
+      )}
+
       {/* Archive */}
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="mb-10 flex items-end justify-between">
