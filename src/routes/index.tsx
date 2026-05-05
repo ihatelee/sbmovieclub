@@ -332,7 +332,7 @@ function HomePage() {
                   Now Watching
                 </span>
 
-                <h1 className="mt-5 hidden text-5xl font-black leading-[0.95] tracking-tight md:block md:text-7xl">
+                <h1 className="mt-5 hidden text-5xl font-black leading-[0.95] tracking-tight md:block lg:text-7xl">
                   {current.title}
                 </h1>
 
@@ -350,6 +350,7 @@ function HomePage() {
                       fallbackName={current.picked_by}
                       linkUserId={currentPickerLinkId}
                       size="md"
+                      bare
                     />
                   )}
                 </div>
@@ -367,13 +368,6 @@ function HomePage() {
                       label="RT"
                       value={formatRating(current.rt_score, "rt")!}
                       color="#FA320A"
-                    />
-                  )}
-                  {formatRating(current.tmdb_rating, "tmdb") && (
-                    <RatingPill
-                      label="TMDB"
-                      value={formatRating(current.tmdb_rating, "tmdb")!}
-                      color="#01D277"
                     />
                   )}
                 </div>
