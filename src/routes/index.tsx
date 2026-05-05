@@ -302,6 +302,8 @@ function HomePage() {
                       fallbackName={current.picked_by}
                       linkUserId={currentPickerLinkId}
                       size="sm"
+                      bare
+                      className="self-start"
                     />
                   )}
                   <div className="mt-1 flex flex-wrap gap-1.5">
@@ -319,13 +321,6 @@ function HomePage() {
                         color="#FA320A"
                       />
                     )}
-                    {formatRating(current.tmdb_rating, "tmdb") && (
-                      <RatingPill
-                        label="TMDB"
-                        value={formatRating(current.tmdb_rating, "tmdb")!}
-                        color="#01D277"
-                      />
-                    )}
                   </div>
                 </div>
               </div>
@@ -337,7 +332,7 @@ function HomePage() {
                   Now Watching
                 </span>
 
-                <h1 className="mt-5 hidden text-5xl font-black leading-[0.95] tracking-tight md:block md:text-7xl">
+                <h1 className="mt-5 hidden text-5xl font-black leading-[0.95] tracking-tight md:block lg:text-7xl">
                   {current.title}
                 </h1>
 
@@ -355,6 +350,7 @@ function HomePage() {
                       fallbackName={current.picked_by}
                       linkUserId={currentPickerLinkId}
                       size="md"
+                      bare
                     />
                   )}
                 </div>
@@ -374,17 +370,10 @@ function HomePage() {
                       color="#FA320A"
                     />
                   )}
-                  {formatRating(current.tmdb_rating, "tmdb") && (
-                    <RatingPill
-                      label="TMDB"
-                      value={formatRating(current.tmdb_rating, "tmdb")!}
-                      color="#01D277"
-                    />
-                  )}
                 </div>
 
                 {current.overview && (
-                  <p className="max-w-xl text-base leading-relaxed text-foreground/85 md:mt-6">
+                  <p className="text-base leading-relaxed text-foreground/85 md:mt-6 md:max-w-xl">
                     {current.overview}
                   </p>
                 )}
