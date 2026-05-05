@@ -302,6 +302,8 @@ function HomePage() {
                       fallbackName={current.picked_by}
                       linkUserId={currentPickerLinkId}
                       size="sm"
+                      bare
+                      className="self-start"
                     />
                   )}
                   <div className="mt-1 flex flex-wrap gap-1.5">
@@ -317,13 +319,6 @@ function HomePage() {
                         label="RT"
                         value={formatRating(current.rt_score, "rt")!}
                         color="#FA320A"
-                      />
-                    )}
-                    {formatRating(current.tmdb_rating, "tmdb") && (
-                      <RatingPill
-                        label="TMDB"
-                        value={formatRating(current.tmdb_rating, "tmdb")!}
-                        color="#01D277"
                       />
                     )}
                   </div>
