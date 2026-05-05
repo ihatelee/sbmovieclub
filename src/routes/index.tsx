@@ -373,7 +373,7 @@ function HomePage() {
                 </div>
 
                 {current.overview && (
-                  <p className="max-w-xl text-base leading-relaxed text-foreground/85 md:mt-6">
+                  <p className="text-base leading-relaxed text-foreground/85 md:mt-6 md:max-w-xl">
                     {current.overview}
                   </p>
                 )}
