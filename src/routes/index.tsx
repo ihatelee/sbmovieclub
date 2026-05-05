@@ -239,54 +239,109 @@ function HomePage() {
         className="relative overflow-hidden"
         style={{ background: "var(--gradient-hero)" }}
       >
-        <div className="relative mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-[320px_1fr] md:py-24">
+        <div className="relative mx-auto max-w-7xl px-6 py-10 md:py-24">
           {current ? (
-            <>
-              {/* Poster with glow */}
-              <div className="relative">
-                <div
-                  aria-hidden
-                  className="absolute -inset-6 rounded-3xl blur-3xl opacity-70"
-                  style={{ background: "var(--gradient-brand)" }}
-                />
-                <div className="relative overflow-hidden rounded-2xl shadow-[var(--shadow-poster)]">
-                  {current.poster_url && !heroImgFailed ? (
-                    <img
-                      src={current.poster_url}
-                      alt={`${current.title} poster`}
-                      width={600}
-                      height={900}
-                      onError={() => setHeroImgFailed(true)}
-                      className="aspect-[2/3] h-full w-full object-cover"
+            <div className="flex flex-col gap-6 md:grid md:grid-cols-[320px_1fr] md:gap-12">
+              {/* Mobile-only "Now Watching" badge above the row */}
+              <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-primary-foreground md:hidden">
+                <span className="pulse-dot inline-block h-2 w-2 rounded-full bg-white" />
+                Now Watching
+              </span>
+
+              {/* Poster + (mobile) summary row */}
+              <div className="flex gap-4 md:block">
+                <div className="relative w-1/4 shrink-0 md:w-auto">
+                  <div
+                    aria-hidden
+                    className="absolute -inset-6 rounded-3xl blur-3xl opacity-70"
+                    style={{ background: "var(--gradient-brand)" }}
+                  />
+                  <div className="relative overflow-hidden rounded-2xl shadow-[var(--shadow-poster)]">
+                    {current.poster_url && !heroImgFailed ? (
+                      <img
+                        src={current.poster_url}
+                        alt={`${current.title} poster`}
+                        width={600}
+                        height={900}
+                        onError={() => setHeroImgFailed(true)}
+                        className="aspect-[2/3] h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="flex aspect-[2/3] h-full w-full items-center justify-center p-3 text-center md:p-6"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 60%, #16162a 100%)",
+                        }}
+                      >
+                        <span className="text-base font-black leading-tight tracking-tight text-white drop-shadow-lg md:text-2xl">
+                          {current.title}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mobile-only summary column to the right of the small poster */}
+                <div className="flex min-w-0 flex-1 flex-col gap-2 md:hidden">
+                  <h1 className="text-2xl font-black leading-[1.05] tracking-tight">
+                    {current.title}
+                  </h1>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-muted-foreground">
+                    {current.year && <span>{current.year}</span>}
+                    {current.runtime && (
+                      <>
+                        <span aria-hidden>•</span>
+                        <span>{current.runtime} min</span>
+                      </>
+                    )}
+                  </div>
+                  {(currentPicker || current.picked_by) && (
+                    <PickedBy
+                      picker={currentPicker}
+                      fallbackName={current.picked_by}
+                      linkUserId={currentPickerLinkId}
+                      size="sm"
                     />
-                  ) : (
-                    <div
-                      className="flex aspect-[2/3] h-full w-full items-center justify-center p-6 text-center"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 60%, #16162a 100%)",
-                      }}
-                    >
-                      <span className="text-2xl font-black leading-tight tracking-tight text-white drop-shadow-lg">
-                        {current.title}
-                      </span>
-                    </div>
                   )}
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    {formatRating(current.imdb_rating, "imdb") && (
+                      <RatingPill
+                        label="IMDB"
+                        value={formatRating(current.imdb_rating, "imdb")!}
+                        color="#F5C518"
+                      />
+                    )}
+                    {formatRating(current.rt_score, "rt") && (
+                      <RatingPill
+                        label="RT"
+                        value={formatRating(current.rt_score, "rt")!}
+                        color="#FA320A"
+                      />
+                    )}
+                    {formatRating(current.tmdb_rating, "tmdb") && (
+                      <RatingPill
+                        label="TMDB"
+                        value={formatRating(current.tmdb_rating, "tmdb")!}
+                        color="#01D277"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Info */}
+              {/* Info (desktop full column; mobile = below row, overview/buttons only) */}
               <div className="flex flex-col justify-center">
-                <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-primary-foreground">
+                <span className="hidden w-fit items-center gap-2 rounded-full bg-primary px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-primary-foreground md:inline-flex">
                   <span className="pulse-dot inline-block h-2 w-2 rounded-full bg-white" />
                   Now Watching
                 </span>
 
-                <h1 className="mt-5 text-5xl font-black leading-[0.95] tracking-tight md:text-7xl">
+                <h1 className="mt-5 hidden text-5xl font-black leading-[0.95] tracking-tight md:block md:text-7xl">
                   {current.title}
                 </h1>
 
-                <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-semibold text-muted-foreground">
+                <div className="mt-4 hidden flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold text-muted-foreground md:flex">
                   {current.year && <span>{current.year}</span>}
                   {current.runtime && (
                     <>
@@ -294,28 +349,17 @@ function HomePage() {
                       <span>{current.runtime} min</span>
                     </>
                   )}
-                  {(currentPicker?.first_name || current.picked_by) && (
-                    <>
-                      <span aria-hidden>•</span>
-                      <span>
-                        Picked by {currentPicker?.first_name ?? current.picked_by}
-                      </span>
-                    </>
-                  )}
-                </div>
-
-                {(currentPicker || current.picked_by) && (
-                  <div className="mt-4">
+                  {(currentPicker || current.picked_by) && (
                     <PickedBy
                       picker={currentPicker}
                       fallbackName={current.picked_by}
                       linkUserId={currentPickerLinkId}
                       size="md"
                     />
-                  </div>
-                )}
+                  )}
+                </div>
 
-                <div className="mt-5 flex flex-wrap gap-2">
+                <div className="mt-5 hidden flex-wrap gap-2 md:flex">
                   {formatRating(current.imdb_rating, "imdb") && (
                     <RatingPill
                       label="IMDB"
@@ -340,7 +384,7 @@ function HomePage() {
                 </div>
 
                 {current.overview && (
-                  <p className="mt-6 max-w-xl text-base leading-relaxed text-foreground/85">
+                  <p className="max-w-xl text-base leading-relaxed text-foreground/85 md:mt-6">
                     {current.overview}
                   </p>
                 )}
