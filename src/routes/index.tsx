@@ -448,7 +448,7 @@ function HomePage() {
                   );
                 })()}
               </div>
-            </>
+            </div>
           ) : (
             <div className="md:col-span-2 flex min-h-[280px] flex-col items-center justify-center text-center">
               <span className="inline-flex w-fit items-center gap-2 rounded-full bg-secondary px-3 py-1.5 text-[11px] font-black uppercase tracking-wider text-muted-foreground">
