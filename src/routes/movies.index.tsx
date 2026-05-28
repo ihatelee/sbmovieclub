@@ -131,6 +131,32 @@ function AllMoviesPage() {
     [movies, watchersByMovie, sort]
   );
 
+  const stats = useMemo(() => {
+    const totalMovies = movies.length;
+    const watchedCount = new Map<string, number>();
+    const ratedCount = new Map<string, number>();
+    for (const w of watches) {
+      watchedCount.set(w.user_id, (watchedCount.get(w.user_id) ?? 0) + 1);
+      if (typeof w.rating === "number" && w.rating > 0) {
+        ratedCount.set(w.user_id, (ratedCount.get(w.user_id) ?? 0) + 1);
+      }
+    }
+    type Leader = { profile: ProfileLite; count: number } | null;
+    let topWatched: Leader = null;
+    let topRated: Leader = null;
+    let topSkipped: Leader = null;
+    for (const p of profiles) {
+      const wc = watchedCount.get(p.id) ?? 0;
+      const rc = ratedCount.get(p.id) ?? 0;
+      const sc = totalMovies - wc;
+      if (!topWatched || wc > topWatched.count) topWatched = { profile: p, count: wc };
+      if (!topRated || rc > topRated.count) topRated = { profile: p, count: rc };
+      if (!topSkipped || sc > topSkipped.count) topSkipped = { profile: p, count: sc };
+    }
+    const totalMinutes = movies.reduce((a, m) => a + (m.runtime ?? 0), 0);
+    return { topWatched, topRated, topSkipped, totalMinutes };
+  }, [movies, watches, profiles]);
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
