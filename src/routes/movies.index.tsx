@@ -24,6 +24,7 @@ type MovieRow = {
   title: string;
   year: number | null;
   poster_url: string | null;
+  runtime: number | null;
   imdb_rating: number | null;
   rt_score: number | null;
   is_current: boolean;
@@ -56,7 +57,7 @@ function AllMoviesPage() {
     const [mRes, wRes, pRes] = await Promise.all([
       supabase
         .from("movies")
-        .select("id, title, year, poster_url, imdb_rating, rt_score, is_current, picked_by_id, picked_by")
+        .select("id, title, year, poster_url, runtime, imdb_rating, rt_score, is_current, picked_by_id, picked_by")
         .order("order_index", { ascending: false }),
       supabase.from("watches").select("user_id, movie_id, rating"),
       supabase
@@ -130,6 +131,32 @@ function AllMoviesPage() {
     [movies, watchersByMovie, sort]
   );
 
+  const stats = useMemo(() => {
+    const totalMovies = movies.length;
+    const watchedCount = new Map<string, number>();
+    const ratedCount = new Map<string, number>();
+    for (const w of watches) {
+      watchedCount.set(w.user_id, (watchedCount.get(w.user_id) ?? 0) + 1);
+      if (typeof w.rating === "number" && w.rating > 0) {
+        ratedCount.set(w.user_id, (ratedCount.get(w.user_id) ?? 0) + 1);
+      }
+    }
+    type Leader = { profile: ProfileLite; count: number } | null;
+    let topWatched: Leader = null;
+    let topRated: Leader = null;
+    let topSkipped: Leader = null;
+    for (const p of profiles) {
+      const wc = watchedCount.get(p.id) ?? 0;
+      const rc = ratedCount.get(p.id) ?? 0;
+      const sc = totalMovies - wc;
+      if (!topWatched || wc > topWatched.count) topWatched = { profile: p, count: wc };
+      if (!topRated || rc > topRated.count) topRated = { profile: p, count: rc };
+      if (!topSkipped || sc > topSkipped.count) topSkipped = { profile: p, count: sc };
+    }
+    const totalMinutes = movies.reduce((a, m) => a + (m.runtime ?? 0), 0);
+    return { topWatched, topRated, topSkipped, totalMinutes };
+  }, [movies, watches, profiles]);
+
   return (
     <div className="min-h-screen bg-background">
       <SiteHeader />
@@ -148,6 +175,33 @@ function AllMoviesPage() {
           <p className="mt-3 text-base font-semibold text-muted-foreground">
             {loading ? "Loading…" : `${movies.length} films`}
           </p>
+
+          {!loading && movies.length > 0 && (
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+              <StatLeader
+                label="Most watched"
+                profile={stats.topWatched?.profile ?? null}
+                value={stats.topWatched?.count ?? 0}
+                unit="films"
+              />
+              <StatLeader
+                label="Most ratings"
+                profile={stats.topRated?.profile ?? null}
+                value={stats.topRated?.count ?? 0}
+                unit="rated"
+              />
+              <StatLeader
+                label="Most skipped"
+                profile={stats.topSkipped?.profile ?? null}
+                value={stats.topSkipped?.count ?? 0}
+                unit="skipped"
+              />
+              <StatTotal
+                label="Total runtime"
+                minutes={stats.totalMinutes}
+              />
+            </div>
+          )}
         </div>
       </section>
 
@@ -380,6 +434,67 @@ function AllMoviesPage() {
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function StatLeader({
+  label,
+  profile,
+  value,
+  unit,
+}: {
+  label: string;
+  profile: ProfileLite | null;
+  value: number;
+  unit: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur">
+      <div className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-3 flex items-center gap-3">
+        <UserAvatar
+          name={profile?.first_name}
+          url={profile?.avatar_url ?? null}
+          size={40}
+          className="ring-2 ring-border"
+        />
+        <div className="min-w-0">
+          <div className="truncate text-sm font-black tracking-tight">
+            {profile?.first_name ?? "—"}
+          </div>
+          <div className="text-xs font-semibold text-primary">
+            {value} {unit}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatTotal({ label, minutes }: { label: string; minutes: number }) {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return (
+    <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur">
+      <div className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-3 flex items-center gap-3">
+        <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-primary/15 text-lg">
+          🎬
+        </div>
+        <div className="min-w-0">
+          <div className="text-sm font-black tracking-tight">
+            {minutes.toLocaleString()} min
+          </div>
+          <div className="text-xs font-semibold text-muted-foreground">
+            {hours.toLocaleString()}h {mins}m
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
