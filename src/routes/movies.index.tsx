@@ -437,3 +437,64 @@ function AllMoviesPage() {
     </div>
   );
 }
+
+function StatLeader({
+  label,
+  profile,
+  value,
+  unit,
+}: {
+  label: string;
+  profile: ProfileLite | null;
+  value: number;
+  unit: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur">
+      <div className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-3 flex items-center gap-3">
+        <UserAvatar
+          name={profile?.first_name}
+          url={profile?.avatar_url ?? null}
+          size={40}
+          className="ring-2 ring-border"
+        />
+        <div className="min-w-0">
+          <div className="truncate text-sm font-black tracking-tight">
+            {profile?.first_name ?? "—"}
+          </div>
+          <div className="text-xs font-semibold text-primary">
+            {value} {unit}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatTotal({ label, minutes }: { label: string; minutes: number }) {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return (
+    <div className="rounded-2xl border border-border bg-card/60 p-4 backdrop-blur">
+      <div className="text-[11px] font-black uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-3 flex items-center gap-3">
+        <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-primary/15 text-lg">
+          🎬
+        </div>
+        <div className="min-w-0">
+          <div className="text-sm font-black tracking-tight">
+            {minutes.toLocaleString()} min
+          </div>
+          <div className="text-xs font-semibold text-muted-foreground">
+            {hours.toLocaleString()}h {mins}m
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
