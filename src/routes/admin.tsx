@@ -91,7 +91,7 @@ function AdminPage() {
         .select(
           "id, tmdb_id, imdb_id, title, year, poster_url, runtime, genres, imdb_rating, rt_score, tmdb_rating, is_current, added_at, picked_by_user_id, picked_by_id, picked_by"
         )
-        .order("order_index", { ascending: false }),
+        .order("added_at", { ascending: false }),
       supabase.from("watches").select("movie_id, rating"),
     ]);
     if (moviesRes.error) {
