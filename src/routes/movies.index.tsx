@@ -24,6 +24,7 @@ type MovieRow = {
   title: string;
   year: number | null;
   poster_url: string | null;
+  runtime: number | null;
   imdb_rating: number | null;
   rt_score: number | null;
   is_current: boolean;
