@@ -175,6 +175,33 @@ function AllMoviesPage() {
           <p className="mt-3 text-base font-semibold text-muted-foreground">
             {loading ? "Loading…" : `${movies.length} films`}
           </p>
+
+          {!loading && movies.length > 0 && (
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+              <StatLeader
+                label="Most watched"
+                profile={stats.topWatched?.profile ?? null}
+                value={stats.topWatched?.count ?? 0}
+                unit="films"
+              />
+              <StatLeader
+                label="Most ratings"
+                profile={stats.topRated?.profile ?? null}
+                value={stats.topRated?.count ?? 0}
+                unit="rated"
+              />
+              <StatLeader
+                label="Most skipped"
+                profile={stats.topSkipped?.profile ?? null}
+                value={stats.topSkipped?.count ?? 0}
+                unit="skipped"
+              />
+              <StatTotal
+                label="Total runtime"
+                minutes={stats.totalMinutes}
+              />
+            </div>
+          )}
         </div>
       </section>
 
