@@ -436,6 +436,7 @@ function ScreeningsTable({
             ) : (
               movies.map((m) => {
                 const r = ratingsByMovie[m.id];
+                const pickerId = getCanonicalPickerId(m, profiles);
                 return (
                   <tr
                     key={m.id}
@@ -459,16 +460,11 @@ function ScreeningsTable({
                     <td className="px-6 py-3">
                       <PickerSelect
                         profiles={pickerProfiles}
-                        value={m.picked_by_id ?? m.picked_by_user_id}
+                        value={pickerId}
                         onChange={(id) => onSetPicker(m.id, id)}
                         size="sm"
                         placeholder={m.picked_by ?? "—"}
                       />
-                      {m.picked_by && !(m.picked_by_id ?? m.picked_by_user_id) && (
-                        <div className="mt-1 text-[11px] font-medium text-muted-foreground">
-                          {m.picked_by}
-                        </div>
-                      )}
                     </td>
                     <td className="px-6 py-3">
                       {m.is_current ? (
