@@ -58,7 +58,6 @@ function AllMoviesPage() {
       supabase
         .from("movies")
         .select("id, title, year, poster_url, runtime, imdb_rating, rt_score, is_current, picked_by_id, picked_by")
-        .order("added_at", { ascending: false, nullsFirst: false })
         .order("order_index", { ascending: false, nullsFirst: false }),
       supabase.from("watches").select("user_id, movie_id, rating"),
       supabase

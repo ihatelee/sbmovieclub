@@ -108,7 +108,6 @@ function HomePage() {
           .from("movies")
           .select(MOVIE_COLUMNS)
           .eq("is_current", false)
-          .order("added_at", { ascending: false, nullsFirst: false })
           .order("order_index", { ascending: false, nullsFirst: false }),
         supabase
           .from("profiles")
