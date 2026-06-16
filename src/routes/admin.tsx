@@ -60,6 +60,19 @@ const OMDB_KEY = import.meta.env.VITE_OMDB_KEY as string | undefined;
 const TMDB_IMG = (path: string | null, size = "w185") =>
   path ? `https://image.tmdb.org/t/p/${size}${path}` : null;
 
+const normalizePickerName = (name: string | null) =>
+  name?.trim().toLowerCase() ?? "";
+
+function getCanonicalPickerId(movie: MovieRow, profiles: ProfileRow[]) {
+  const existingId = movie.picked_by_id ?? movie.picked_by_user_id;
+  if (existingId) return existingId;
+  const legacyName = normalizePickerName(movie.picked_by);
+  if (!legacyName) return null;
+  return (
+    profiles.find((p) => normalizePickerName(p.first_name) === legacyName)?.id ?? null
+  );
+}
+
 // ---------------- Route ----------------
 
 export const Route = createFileRoute("/admin")({
@@ -140,6 +153,41 @@ function AdminPage() {
     void refreshMovies();
     void refreshProfiles();
   }, []);
+
+  useEffect(() => {
+    if (loadingMovies || loadingProfiles || profiles.length === 0) return;
+    const fixes = movies
+      .map((movie) => ({ movie, pickerId: getCanonicalPickerId(movie, profiles) }))
+      .filter(
+        ({ movie, pickerId }) =>
+          pickerId &&
+          (movie.picked_by_id !== pickerId || movie.picked_by_user_id !== pickerId)
+      );
+    if (fixes.length === 0) return;
+    setMovies((prev) =>
+      prev.map((movie) => {
+        const fix = fixes.find((item) => item.movie.id === movie.id);
+        return fix
+          ? { ...movie, picked_by_id: fix.pickerId, picked_by_user_id: fix.pickerId }
+          : movie;
+      })
+    );
+    void Promise.all(
+      fixes.map(({ movie, pickerId }) =>
+        supabase
+          .from("movies")
+          .update({ picked_by_id: pickerId, picked_by_user_id: pickerId })
+          .eq("id", movie.id)
+      )
+    ).then((results) => {
+      const failed = results.find((result) => result.error);
+      if (failed?.error) {
+        toast.error("Couldn't sync some picker assignments", {
+          description: failed.error.message,
+        });
+      }
+    });
+  }, [loadingMovies, loadingProfiles, movies, profiles]);
 
   const moviesCount = movies.length;
   const approvedCount = useMemo(
