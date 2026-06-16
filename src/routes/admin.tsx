@@ -758,6 +758,8 @@ function AddMovieDialog({
 
       const year = details.release_date ? parseInt(details.release_date.slice(0, 4), 10) : null;
       const posterUrl = TMDB_IMG(details.poster_path ?? r.poster_path, "w500");
+      const pickerName =
+        profiles.find((profile) => profile.id === pickerId)?.first_name ?? null;
 
       const { error } = await supabase.from("movies").insert({
         tmdb_id: r.id,
@@ -774,6 +776,7 @@ function AddMovieDialog({
         is_current: false,
         picked_by_user_id: pickerId,
         picked_by_id: pickerId,
+        picked_by: pickerName,
       });
       if (error) throw error;
 
