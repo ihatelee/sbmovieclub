@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { UserAvatar } from "@/components/UserAvatar";
 import { PickedBy } from "@/components/PickedBy";
 import { QuickRate } from "@/components/QuickRate";
-import { SortDropdown, sortMovies, sortMoviesByManualChronology, type SortKey } from "@/lib/movie-sort";
+import { SortDropdown, sortMovies, type SortKey } from "@/lib/movie-sort";
 import { MobileMovieRow } from "@/components/MobileMovieRow";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
