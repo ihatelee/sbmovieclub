@@ -8,6 +8,7 @@ import { PickedBy } from "@/components/PickedBy";
 import { WatchedAvatar } from "@/components/WatchedAvatar";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { sortMoviesByManualChronology } from "@/lib/movie-sort";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -129,7 +130,7 @@ function HomePage() {
 
       const currentMovie = (currentRes.data as MovieRow | null) ?? null;
       setCurrent(currentMovie);
-      setRecent((recentRes.data as MovieRow[] | null) ?? []);
+      setRecent(sortMoviesByManualChronology((recentRes.data as MovieRow[] | null) ?? []));
       setProfiles((profilesRes.data as ProfileLite[] | null) ?? []);
 
       const watchesRes = await supabase
