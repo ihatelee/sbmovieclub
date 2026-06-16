@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { UserAvatar } from "@/components/UserAvatar";
 import { PickedBy } from "@/components/PickedBy";
 import { QuickRate } from "@/components/QuickRate";
-import { SortDropdown, sortMovies, type SortKey } from "@/lib/movie-sort";
+import { SortDropdown, sortMovies, sortMoviesByManualChronology, type SortKey } from "@/lib/movie-sort";
 import { MobileMovieRow } from "@/components/MobileMovieRow";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -69,7 +69,7 @@ function AllMoviesPage() {
     if (mRes.error) console.error("[all-movies] movies:", mRes.error.message);
     if (wRes.error) console.error("[all-movies] watches:", wRes.error.message);
     if (pRes.error) console.error("[all-movies] profiles:", pRes.error.message);
-    setMovies((mRes.data as MovieRow[] | null) ?? []);
+    setMovies(sortMoviesByManualChronology((mRes.data as MovieRow[] | null) ?? []));
     setWatches((wRes.data as WatchRow[] | null) ?? []);
     setProfiles((pRes.data as ProfileLite[] | null) ?? []);
     setLoading(false);
