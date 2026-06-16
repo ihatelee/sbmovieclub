@@ -109,8 +109,7 @@ function HomePage() {
           .select(MOVIE_COLUMNS)
           .eq("is_current", false)
           .order("added_at", { ascending: false, nullsFirst: false })
-          .order("order_index", { ascending: false, nullsFirst: false })
-          .limit(15),
+          .order("order_index", { ascending: false, nullsFirst: false }),
         supabase
           .from("profiles")
           .select("id, first_name, avatar_url"),
@@ -130,7 +129,9 @@ function HomePage() {
 
       const currentMovie = (currentRes.data as MovieRow | null) ?? null;
       setCurrent(currentMovie);
-      setRecent(sortMoviesByManualChronology((recentRes.data as MovieRow[] | null) ?? []));
+      setRecent(
+        sortMoviesByManualChronology((recentRes.data as MovieRow[] | null) ?? []).slice(0, 15)
+      );
       setProfiles((profilesRes.data as ProfileLite[] | null) ?? []);
 
       const watchesRes = await supabase
