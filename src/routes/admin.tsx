@@ -157,26 +157,42 @@ function AdminPage() {
   useEffect(() => {
     if (loadingMovies || loadingProfiles || profiles.length === 0) return;
     const fixes = movies
-      .map((movie) => ({ movie, pickerId: getCanonicalPickerId(movie, profiles) }))
+      .map((movie) => {
+        const pickerId = getCanonicalPickerId(movie, profiles);
+        const pickerName =
+          profiles.find((profile) => profile.id === pickerId)?.first_name ?? null;
+        return { movie, pickerId, pickerName };
+      })
       .filter(
-        ({ movie, pickerId }) =>
+        ({ movie, pickerId, pickerName }) =>
           pickerId &&
-          (movie.picked_by_id !== pickerId || movie.picked_by_user_id !== pickerId)
+          (movie.picked_by_id !== pickerId ||
+            movie.picked_by_user_id !== pickerId ||
+            movie.picked_by !== pickerName)
       );
     if (fixes.length === 0) return;
     setMovies((prev) =>
       prev.map((movie) => {
         const fix = fixes.find((item) => item.movie.id === movie.id);
         return fix
-          ? { ...movie, picked_by_id: fix.pickerId, picked_by_user_id: fix.pickerId }
+          ? {
+              ...movie,
+              picked_by_id: fix.pickerId,
+              picked_by_user_id: fix.pickerId,
+              picked_by: fix.pickerName,
+            }
           : movie;
       })
     );
     void Promise.all(
-      fixes.map(({ movie, pickerId }) =>
+      fixes.map(({ movie, pickerId, pickerName }) =>
         supabase
           .from("movies")
-          .update({ picked_by_id: pickerId, picked_by_user_id: pickerId })
+          .update({
+            picked_by_id: pickerId,
+            picked_by_user_id: pickerId,
+            picked_by: pickerName,
+          })
           .eq("id", movie.id)
       )
     ).then((results) => {
