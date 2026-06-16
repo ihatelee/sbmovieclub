@@ -65,7 +65,7 @@ const normalizePickerName = (name: string | null) =>
 
 function getCanonicalPickerId(movie: MovieRow, profiles: ProfileRow[]) {
   const existingId = movie.picked_by_id ?? movie.picked_by_user_id;
-  if (existingId) return existingId;
+  if (existingId && profiles.some((profile) => profile.id === existingId)) return existingId;
   const legacyName = normalizePickerName(movie.picked_by);
   if (!legacyName) return null;
   return (
