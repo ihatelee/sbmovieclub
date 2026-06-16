@@ -26,18 +26,18 @@ type WatchLite = { rating: number | null };
 
 const MANUAL_CHRONOLOGY_ORDER = new Map(
   [
-    "deep cover",
-    "pillion",
-    "i swear",
-    "bronson",
-    "claw fang",
-    "kissed claw fang",
-    "dear zachary",
-    "truman show",
-    "ballad wallis island",
-    "running scared",
-    "taking deborah logan",
-  ].map((title, index) => [title, title === "kissed claw fang" ? 4 : index])
+    ["deep cover", 0],
+    ["pillion", 1],
+    ["i swear", 2],
+    ["bronson", 3],
+    ["claw fang", 4],
+    ["kissed by claw fang", 4],
+    ["dear zachary", 5],
+    ["truman show", 6],
+    ["ballad of wallis island", 7],
+    ["running scared", 8],
+    ["taking of deborah logan", 9],
+  ]
 );
 
 function normalizeTitle(title: string): string {
