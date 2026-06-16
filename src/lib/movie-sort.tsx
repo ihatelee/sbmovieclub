@@ -24,6 +24,50 @@ export const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 
 type WatchLite = { rating: number | null };
 
+const MANUAL_CHRONOLOGY_ORDER = new Map([
+  ["deep cover", 0],
+  ["pillion", 1],
+  ["i swear", 2],
+  ["bronson", 3],
+  ["claw fang", 4],
+  ["kissed by claw fang", 4],
+  ["dear zachary", 5],
+  ["truman show", 6],
+  ["ballad of wallis island", 7],
+  ["running scared", 8],
+  ["taking of deborah logan", 9],
+]);
+
+const MANUAL_CHRONOLOGY_TITLES = [...MANUAL_CHRONOLOGY_ORDER.entries()];
+
+function normalizeTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/^the\s+/, "")
+    .replace(/&/g, "and")
+    .replace(/\band\b/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+export function sortMoviesByManualChronology<T extends { title: string }>(movies: T[]): T[] {
+  return [...movies].sort((a, b) => {
+    const aTitle = normalizeTitle(a.title);
+    const bTitle = normalizeTitle(b.title);
+    const ai =
+      MANUAL_CHRONOLOGY_ORDER.get(aTitle) ??
+      MANUAL_CHRONOLOGY_TITLES.find(([title]) => aTitle.startsWith(`${title} `))?.[1];
+    const bi =
+      MANUAL_CHRONOLOGY_ORDER.get(bTitle) ??
+      MANUAL_CHRONOLOGY_TITLES.find(([title]) => bTitle.startsWith(`${title} `))?.[1];
+    if (ai !== undefined || bi !== undefined) {
+      return (ai ?? Number.MAX_SAFE_INTEGER) - (bi ?? Number.MAX_SAFE_INTEGER);
+    }
+    return 0;
+  });
+}
+
 function avg(rs: number[]): number {
   if (rs.length === 0) return 0;
   return rs.reduce((a, b) => a + b, 0) / rs.length;
