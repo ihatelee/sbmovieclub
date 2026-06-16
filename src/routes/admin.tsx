@@ -241,17 +241,28 @@ function AdminPage() {
   };
 
   const handleSetPicker = async (movieId: string, pickerId: string | null) => {
+    const pickerName =
+      profiles.find((profile) => profile.id === pickerId)?.first_name ?? null;
     // Optimistic — update both the new FK column and the legacy one in sync.
     setMovies((prev) =>
       prev.map((m) =>
         m.id === movieId
-          ? { ...m, picked_by_id: pickerId, picked_by_user_id: pickerId }
+          ? {
+              ...m,
+              picked_by_id: pickerId,
+              picked_by_user_id: pickerId,
+              picked_by: pickerName,
+            }
           : m
       )
     );
     const { error } = await supabase
       .from("movies")
-      .update({ picked_by_id: pickerId, picked_by_user_id: pickerId })
+      .update({
+        picked_by_id: pickerId,
+        picked_by_user_id: pickerId,
+        picked_by: pickerName,
+      })
       .eq("id", movieId);
     if (error) {
       toast.error("Couldn't update picker", { description: error.message });
