@@ -38,6 +38,8 @@ const MANUAL_CHRONOLOGY_ORDER = new Map([
   ["taking of deborah logan", 9],
 ]);
 
+const MANUAL_CHRONOLOGY_TITLES = [...MANUAL_CHRONOLOGY_ORDER.entries()];
+
 function normalizeTitle(title: string): string {
   return title
     .toLowerCase()
@@ -51,8 +53,14 @@ function normalizeTitle(title: string): string {
 
 export function sortMoviesByManualChronology<T extends { title: string }>(movies: T[]): T[] {
   return [...movies].sort((a, b) => {
-    const ai = MANUAL_CHRONOLOGY_ORDER.get(normalizeTitle(a.title));
-    const bi = MANUAL_CHRONOLOGY_ORDER.get(normalizeTitle(b.title));
+    const aTitle = normalizeTitle(a.title);
+    const bTitle = normalizeTitle(b.title);
+    const ai =
+      MANUAL_CHRONOLOGY_ORDER.get(aTitle) ??
+      MANUAL_CHRONOLOGY_TITLES.find(([title]) => aTitle.startsWith(`${title} `))?.[1];
+    const bi =
+      MANUAL_CHRONOLOGY_ORDER.get(bTitle) ??
+      MANUAL_CHRONOLOGY_TITLES.find(([title]) => bTitle.startsWith(`${title} `))?.[1];
     if (ai !== undefined || bi !== undefined) {
       return (ai ?? Number.MAX_SAFE_INTEGER) - (bi ?? Number.MAX_SAFE_INTEGER);
     }
