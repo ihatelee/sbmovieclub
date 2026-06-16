@@ -60,6 +60,19 @@ const OMDB_KEY = import.meta.env.VITE_OMDB_KEY as string | undefined;
 const TMDB_IMG = (path: string | null, size = "w185") =>
   path ? `https://image.tmdb.org/t/p/${size}${path}` : null;
 
+const normalizePickerName = (name: string | null) =>
+  name?.trim().toLowerCase() ?? "";
+
+function getCanonicalPickerId(movie: MovieRow, profiles: ProfileRow[]) {
+  const existingId = movie.picked_by_id ?? movie.picked_by_user_id;
+  if (existingId && profiles.some((profile) => profile.id === existingId)) return existingId;
+  const legacyName = normalizePickerName(movie.picked_by);
+  if (!legacyName) return null;
+  return (
+    profiles.find((p) => normalizePickerName(p.first_name) === legacyName)?.id ?? null
+  );
+}
+
 // ---------------- Route ----------------
 
 export const Route = createFileRoute("/admin")({
@@ -141,6 +154,57 @@ function AdminPage() {
     void refreshProfiles();
   }, []);
 
+  useEffect(() => {
+    if (loadingMovies || loadingProfiles || profiles.length === 0) return;
+    const fixes = movies
+      .map((movie) => {
+        const pickerId = getCanonicalPickerId(movie, profiles);
+        const pickerName =
+          profiles.find((profile) => profile.id === pickerId)?.first_name ?? null;
+        return { movie, pickerId, pickerName };
+      })
+      .filter(
+        ({ movie, pickerId, pickerName }) =>
+          pickerId &&
+          (movie.picked_by_id !== pickerId ||
+            movie.picked_by_user_id !== pickerId ||
+            movie.picked_by !== pickerName)
+      );
+    if (fixes.length === 0) return;
+    setMovies((prev) =>
+      prev.map((movie) => {
+        const fix = fixes.find((item) => item.movie.id === movie.id);
+        return fix
+          ? {
+              ...movie,
+              picked_by_id: fix.pickerId,
+              picked_by_user_id: fix.pickerId,
+              picked_by: fix.pickerName,
+            }
+          : movie;
+      })
+    );
+    void Promise.all(
+      fixes.map(({ movie, pickerId, pickerName }) =>
+        supabase
+          .from("movies")
+          .update({
+            picked_by_id: pickerId,
+            picked_by_user_id: pickerId,
+            picked_by: pickerName,
+          })
+          .eq("id", movie.id)
+      )
+    ).then((results) => {
+      const failed = results.find((result) => result.error);
+      if (failed?.error) {
+        toast.error("Couldn't sync some picker assignments", {
+          description: failed.error.message,
+        });
+      }
+    });
+  }, [loadingMovies, loadingProfiles, movies, profiles]);
+
   const moviesCount = movies.length;
   const approvedCount = useMemo(
     () => profiles.filter((p) => p.is_approved).length,
@@ -193,17 +257,28 @@ function AdminPage() {
   };
 
   const handleSetPicker = async (movieId: string, pickerId: string | null) => {
+    const pickerName =
+      profiles.find((profile) => profile.id === pickerId)?.first_name ?? null;
     // Optimistic — update both the new FK column and the legacy one in sync.
     setMovies((prev) =>
       prev.map((m) =>
         m.id === movieId
-          ? { ...m, picked_by_id: pickerId, picked_by_user_id: pickerId }
+          ? {
+              ...m,
+              picked_by_id: pickerId,
+              picked_by_user_id: pickerId,
+              picked_by: pickerName,
+            }
           : m
       )
     );
     const { error } = await supabase
       .from("movies")
-      .update({ picked_by_id: pickerId, picked_by_user_id: pickerId })
+      .update({
+        picked_by_id: pickerId,
+        picked_by_user_id: pickerId,
+        picked_by: pickerName,
+      })
       .eq("id", movieId);
     if (error) {
       toast.error("Couldn't update picker", { description: error.message });
@@ -377,6 +452,7 @@ function ScreeningsTable({
             ) : (
               movies.map((m) => {
                 const r = ratingsByMovie[m.id];
+                const pickerId = getCanonicalPickerId(m, profiles);
                 return (
                   <tr
                     key={m.id}
@@ -400,16 +476,11 @@ function ScreeningsTable({
                     <td className="px-6 py-3">
                       <PickerSelect
                         profiles={pickerProfiles}
-                        value={m.picked_by_id ?? m.picked_by_user_id}
+                        value={pickerId}
                         onChange={(id) => onSetPicker(m.id, id)}
                         size="sm"
                         placeholder={m.picked_by ?? "—"}
                       />
-                      {m.picked_by && !(m.picked_by_id ?? m.picked_by_user_id) && (
-                        <div className="mt-1 text-[11px] font-medium text-muted-foreground">
-                          {m.picked_by}
-                        </div>
-                      )}
                     </td>
                     <td className="px-6 py-3">
                       {m.is_current ? (
@@ -687,6 +758,8 @@ function AddMovieDialog({
 
       const year = details.release_date ? parseInt(details.release_date.slice(0, 4), 10) : null;
       const posterUrl = TMDB_IMG(details.poster_path ?? r.poster_path, "w500");
+      const pickerName =
+        profiles.find((profile) => profile.id === pickerId)?.first_name ?? null;
 
       const { error } = await supabase.from("movies").insert({
         tmdb_id: r.id,
@@ -703,6 +776,7 @@ function AddMovieDialog({
         is_current: false,
         picked_by_user_id: pickerId,
         picked_by_id: pickerId,
+        picked_by: pickerName,
       });
       if (error) throw error;
 
