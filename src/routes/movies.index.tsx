@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { UserAvatar } from "@/components/UserAvatar";
 import { PickedBy } from "@/components/PickedBy";
 import { QuickRate } from "@/components/QuickRate";
-import { SortDropdown, sortMovies, sortMoviesByManualChronology, type SortKey } from "@/lib/movie-sort";
+import { SortDropdown, sortMovies, type SortKey } from "@/lib/movie-sort";
 import { MobileMovieRow } from "@/components/MobileMovieRow";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -58,7 +58,6 @@ function AllMoviesPage() {
       supabase
         .from("movies")
         .select("id, title, year, poster_url, runtime, imdb_rating, rt_score, is_current, picked_by_id, picked_by")
-        .order("added_at", { ascending: false, nullsFirst: false })
         .order("order_index", { ascending: false, nullsFirst: false }),
       supabase.from("watches").select("user_id, movie_id, rating"),
       supabase
@@ -69,7 +68,7 @@ function AllMoviesPage() {
     if (mRes.error) console.error("[all-movies] movies:", mRes.error.message);
     if (wRes.error) console.error("[all-movies] watches:", wRes.error.message);
     if (pRes.error) console.error("[all-movies] profiles:", pRes.error.message);
-    setMovies(sortMoviesByManualChronology((mRes.data as MovieRow[] | null) ?? []));
+    setMovies((mRes.data as MovieRow[] | null) ?? []);
     setWatches((wRes.data as WatchRow[] | null) ?? []);
     setProfiles((pRes.data as ProfileLite[] | null) ?? []);
     setLoading(false);
