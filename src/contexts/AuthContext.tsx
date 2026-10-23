@@ -15,12 +15,9 @@ type AuthContextValue = {
   session: Session | null;
   user: User | null;
   profile: Profile | null;
+  isMember: boolean | null;
   loading: boolean;
-  signUp: (
-    email: string,
-    password: string,
-    firstName: string
-  ) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, firstName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 };
@@ -30,6 +27,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [isMember, setIsMember] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Avoid stale fetches if the session changes mid-flight.
@@ -40,25 +38,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!userId) {
       setProfile(null);
+      setIsMember(null);
       return;
     }
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, first_name, email, is_approved, is_admin, avatar_url")
-      .eq("id", userId)
-      .maybeSingle();
+    const [membershipRes, profileRes] = await Promise.all([
+      supabase.schema("public").rpc("is_member", { app: "sbmovieclub" }),
+      supabase
+        .from("profiles")
+        .select("id, first_name, email, is_approved, is_admin, avatar_url")
+        .eq("id", userId)
+        .maybeSingle(),
+    ]);
 
     // Drop the result if a newer fetch started.
     if (token !== fetchTokenRef.current) return;
 
-    if (error) {
-      console.error("[auth] Failed to load profile:", error.message);
+    if (membershipRes.error) {
+      console.error("[auth] Failed to check membership:", membershipRes.error.message);
+      setIsMember(false);
+    } else {
+      setIsMember(membershipRes.data ?? false);
+    }
+
+    if (profileRes.error) {
+      console.error("[auth] Failed to load profile:", profileRes.error.message);
       setProfile(null);
       return;
     }
 
-    setProfile((data as Profile | null) ?? null);
+    setProfile((profileRes.data as Profile | null) ?? null);
   }, []);
 
   useEffect(() => {
@@ -92,36 +101,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchProfile]);
 
-  const signUp = useCallback<AuthContextValue["signUp"]>(
-    async (email, password, firstName) => {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { first_name: firstName },
-          emailRedirectTo:
-            typeof window !== "undefined" ? window.location.origin : undefined,
-        },
-      });
-      return { error: error ?? null };
-    },
-    []
-  );
+  const signUp = useCallback<AuthContextValue["signUp"]>(async (email, password, firstName) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { first_name: firstName },
+        emailRedirectTo: "https://sbmovie.club",
+      },
+    });
+    return { error: error ?? null };
+  }, []);
 
-  const signIn = useCallback<AuthContextValue["signIn"]>(
-    async (email, password) => {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      return { error: error ?? null };
-    },
-    []
-  );
+  const signIn = useCallback<AuthContextValue["signIn"]>(async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    return { error: error ?? null };
+  }, []);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setProfile(null);
+    setIsMember(null);
   }, []);
 
   const value = useMemo<AuthContextValue>(
@@ -129,12 +132,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       user: session?.user ?? null,
       profile,
+      isMember,
       loading,
       signUp,
       signIn,
       signOut,
     }),
-    [session, profile, loading, signUp, signIn, signOut]
+    [session, profile, isMember, loading, signUp, signIn, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -41,21 +41,22 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "A private movie club. Track what we've watched together, discover what's next.",
+          "SB Movie Club is a private web app for members to track and rate movies watched together.",
       },
       { property: "og:title", content: "SB Movie Club" },
       {
         property: "og:description",
-        content: "A private movie club. Track what we've watched together.",
+        content:
+          "SB Movie Club is a private web app for members to track and rate movies watched together.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:title", content: "SB Movie Club" },
-      { name: "description", content: "SB Movie Club is a private web app for members to track and rate movies watched together." },
-      { property: "og:description", content: "SB Movie Club is a private web app for members to track and rate movies watched together." },
-      { name: "twitter:description", content: "SB Movie Club is a private web app for members to track and rate movies watched together." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/43d41878-2c8e-4f1f-907d-cfe1fe165cd8/id-preview-f507b32c--9ffcafe6-078d-4b29-af11-74622bf6a84a.lovable.app-1777055803674.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/43d41878-2c8e-4f1f-907d-cfe1fe165cd8/id-preview-f507b32c--9ffcafe6-078d-4b29-af11-74622bf6a84a.lovable.app-1777055803674.png" },
-      { name: "twitter:card", content: "summary_large_image" },
+      {
+        name: "twitter:description",
+        content:
+          "SB Movie Club is a private web app for members to track and rate movies watched together.",
+      },
+      { name: "twitter:card", content: "summary" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
