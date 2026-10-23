@@ -17,7 +17,6 @@ type AuthContextValue = {
   profile: Profile | null;
   isMember: boolean | null;
   loading: boolean;
-  signUp: (email: string, password: string, firstName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 };
@@ -101,18 +100,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchProfile]);
 
-  const signUp = useCallback<AuthContextValue["signUp"]>(async (email, password, firstName) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { first_name: firstName },
-        emailRedirectTo: "https://sbmovie.club",
-      },
-    });
-    return { error: error ?? null };
-  }, []);
-
   const signIn = useCallback<AuthContextValue["signIn"]>(async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -134,11 +121,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       isMember,
       loading,
-      signUp,
       signIn,
       signOut,
     }),
-    [session, profile, isMember, loading, signUp, signIn, signOut],
+    [session, profile, isMember, loading, signIn, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
